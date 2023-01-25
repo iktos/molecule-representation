@@ -11,13 +11,18 @@ export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
   const svgFromCache = getMoleculeSvgFromCache(cacheParams);
   if (svgFromCache) return svgFromCache;
 
-  const { width, height, details = {}, atomsToHighlight, bondsToHighlight, isClickable } = params;
+  const { width, height, details = {}, atomsToHighlight, bondsToHighlight, isClickable, clickableAtoms } = params;
   const highlightBondColors = getHighlightColors(bondsToHighlight);
   const highlightAtomColors = getHighlightColors(atomsToHighlight);
   const moleculeDetails = isClickable ? get_molecule_details(canonicalSmiles, RDKit) : null;
   if (isClickable && moleculeDetails) {
+    const clickableAtomsBackgroundColor = clickableAtoms?.clickableAtomsBackgroundColor ?? TRANSPARANT_RDKIT_COLOR;
+    const clickableAtomIds = clickableAtoms?.clickableAtomsIds ?? [...Array(moleculeDetails.numAtoms).keys()];
     for (let i = 0; i < moleculeDetails.numAtoms; i++) {
-      if (!atomsToHighlight?.flat().includes(i)) {
+      if (atomsToHighlight?.flat().includes(i)) continue;
+      if (clickableAtomIds.includes(i)) {
+        highlightAtomColors[i] = clickableAtomsBackgroundColor;
+      } else {
         highlightAtomColors[i] = TRANSPARANT_RDKIT_COLOR;
       }
     }
@@ -98,6 +103,12 @@ interface DrawSmilesSVGProps {
   atomsToHighlight?: number[][];
   bondsToHighlight?: number[][];
   isClickable?: boolean;
+  clickableAtoms?: ClickableAtoms;
+}
+
+export interface ClickableAtoms {
+  clickableAtomsIds: number[];
+  clickableAtomsBackgroundColor?: RDKitColor;
 }
 
 interface DrawSmartsSVGProps {

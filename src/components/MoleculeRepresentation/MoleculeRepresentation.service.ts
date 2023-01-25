@@ -5,10 +5,21 @@ const CLICKABLE_ATOM_ID = 'clickable-atom-';
 const getClickableAtomIdFromAtomIdx = (atomIdx: number) => `${CLICKABLE_ATOM_ID}${atomIdx}`;
 export const getAtomIdxFromClickableId = (id: string) => id.replace(CLICKABLE_ATOM_ID, '');
 
-export const computeClickingAreaForAtoms = async (numAtoms: number, parentDiv: HTMLDivElement | null) => {
+export const computeClickingAreaForAtoms = async ({
+  numAtoms,
+  parentDiv,
+  clickableAtoms,
+}: {
+  numAtoms: number;
+  parentDiv: HTMLDivElement | null;
+  clickableAtoms?: number[];
+}) => {
   if (!parentDiv) return [];
 
-  const rectsForHiddenAtoms = await computeClickingAreaForHiddenAtoms(numAtoms, parentDiv);
+  const atomsToIgnore = clickableAtoms
+    ? new Set([...Array(numAtoms).keys()].filter((atomIdx) => !clickableAtoms.includes(atomIdx)))
+    : null;
+  const rectsForHiddenAtoms = await computeClickingAreaForHiddenAtoms(numAtoms, parentDiv, atomsToIgnore);
   const processedHiddenAtomsIds = rectsForHiddenAtoms.map((rect) => getAtomIdxFromClickableId(rect.id)).map(parseFloat);
   const rectsForVisibleAtoms = await computeClickingAreaForVisibleAtoms(
     numAtoms,
@@ -53,9 +64,15 @@ const computeClickingAreaForVisibleAtoms = async (
   return rects;
 };
 
-const computeClickingAreaForHiddenAtoms = async (numAtoms: number, parentDiv: HTMLDivElement) => {
+const computeClickingAreaForHiddenAtoms = async (
+  numAtoms: number,
+  parentDiv: HTMLDivElement,
+  atomsToIgnore: Set<number> | null = null,
+) => {
   const rects: Rect[] = [];
   for (let atomIdx = 0; atomIdx < numAtoms; atomIdx++) {
+    if (atomsToIgnore && atomsToIgnore.has(atomIdx)) continue;
+
     const matchedElems = (await waitForChildFromParent(getBondSelector(atomIdx), parentDiv)) as SVGPathElement[];
 
     for (const elem of matchedElems) {
@@ -68,7 +85,10 @@ const computeClickingAreaForHiddenAtoms = async (numAtoms: number, parentDiv: HT
       const endAtomIndex = atomIndicesInBond[1];
 
       const { end, length, start } = getPathEdgePoints(elem);
-      if (!isElementInParentBySelector(getVisibleAtomSelector(startAtomIndex), parentDiv)) {
+      if (
+        !isElementInParentBySelector(getVisibleAtomSelector(startAtomIndex), parentDiv) &&
+        !atomsToIgnore?.has(startAtomIndex)
+      ) {
         rects.push({
           id: getClickableAtomIdFromAtomIdx(startAtomIndex),
           x: start.x - length / 4,
@@ -77,7 +97,10 @@ const computeClickingAreaForHiddenAtoms = async (numAtoms: number, parentDiv: HT
           width: length / 2,
         });
       }
-      if (!isElementInParentBySelector(getVisibleAtomSelector(endAtomIndex), parentDiv)) {
+      if (
+        !isElementInParentBySelector(getVisibleAtomSelector(endAtomIndex), parentDiv) &&
+        !atomsToIgnore?.has(endAtomIndex)
+      ) {
         rects.push({
           id: getClickableAtomIdFromAtomIdx(endAtomIndex),
           x: end.x - length / 4,
