@@ -11,16 +11,17 @@ export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
   const svgFromCache = getMoleculeSvgFromCache(cacheParams);
   if (svgFromCache) return svgFromCache;
 
-  const { width, height, details = {}, atomsToHighlight, bondsToHighlight, isClickable } = params;
+  const { width, height, details = {}, atomsToHighlight, bondsToHighlight, isClickable, clickableAtoms } = params;
   const highlightBondColors = getHighlightColors(bondsToHighlight);
   const highlightAtomColors = getHighlightColors(atomsToHighlight);
   const moleculeDetails = isClickable ? get_molecule_details(canonicalSmiles, RDKit) : null;
   if (isClickable && moleculeDetails) {
-    for (let i = 0; i < moleculeDetails.numAtoms; i++) {
-      if (!atomsToHighlight?.flat().includes(i)) {
-        highlightAtomColors[i] = TRANSPARANT_RDKIT_COLOR;
-      }
-    }
+    setHighlightColorForClickableMolecule({
+      nbAtoms: moleculeDetails.numAtoms,
+      clickableAtoms,
+      atomsToHighlight,
+      highlightAtomColors,
+    });
   }
   const atoms = isClickable && moleculeDetails ? [...Array(moleculeDetails.numAtoms).keys()] : atomsToHighlight?.flat();
   const bonds = bondsToHighlight?.flat();
@@ -69,7 +70,7 @@ export const get_svg_from_smarts = (params: DrawSmartsSVGProps, RDKit: RDKitModu
 
 const getHighlightColors = (items?: number[][]) => {
   // give each array of atoms a color, enabling multi-color highlights
-  const highlightColors: Record<number, RDKitColor> = {};
+  const highlightColors: HighlightColors = {};
   let cpt = 0;
   const limit = HIGHLIGHT_RDKIT_COLORS.length;
   for (const item of items ?? []) {
@@ -82,6 +83,29 @@ const getHighlightColors = (items?: number[][]) => {
   return highlightColors;
 };
 
+const setHighlightColorForClickableMolecule = ({
+  nbAtoms,
+  clickableAtoms,
+  atomsToHighlight,
+  highlightAtomColors,
+}: {
+  nbAtoms: number;
+  clickableAtoms?: ClickableAtoms;
+  atomsToHighlight?: number[][];
+  highlightAtomColors: HighlightColors;
+}) => {
+  const clickableAtomsBackgroundColor = clickableAtoms?.clickableAtomsBackgroundColor ?? TRANSPARANT_RDKIT_COLOR;
+  const clickableAtomIds = clickableAtoms?.clickableAtomsIds ?? [...Array(nbAtoms).keys()];
+  for (let i = 0; i < nbAtoms; i++) {
+    if (atomsToHighlight?.flat().includes(i)) continue;
+    if (clickableAtomIds.includes(i)) {
+      highlightAtomColors[i] = clickableAtomsBackgroundColor;
+    } else {
+      highlightAtomColors[i] = TRANSPARANT_RDKIT_COLOR;
+    }
+  }
+};
+
 const DEFAULT_DRAWING_DETAILS = {
   bondLineWidth: 1,
   backgroundColour: [1, 1, 1, 0],
@@ -90,7 +114,7 @@ const DEFAULT_DRAWING_DETAILS = {
   fixedBondLength: 50,
 };
 
-interface DrawSmilesSVGProps {
+export interface DrawSmilesSVGProps {
   smiles: string;
   width: number;
   height: number;
@@ -98,6 +122,12 @@ interface DrawSmilesSVGProps {
   atomsToHighlight?: number[][];
   bondsToHighlight?: number[][];
   isClickable?: boolean;
+  clickableAtoms?: ClickableAtoms;
+}
+
+export interface ClickableAtoms {
+  clickableAtomsIds: number[];
+  clickableAtomsBackgroundColor?: RDKitColor;
 }
 
 interface DrawSmartsSVGProps {
@@ -105,3 +135,5 @@ interface DrawSmartsSVGProps {
   width: number;
   height: number;
 }
+
+type HighlightColors = Record<number, RDKitColor>;
