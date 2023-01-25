@@ -7,6 +7,22 @@
   "files": [
     "lib"
   ],
+  "keywords": [
+    "javascript",
+    "typescript",
+    "react",
+    "rdkit",
+    "wasm",
+    "cheminformatics",
+    "molecule",
+    "molecule-visualization",
+    "molecule-viewer",
+    "molecule-drawing"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iktos/molecule-representation.git"
+  },
   "scripts": {
     "build": "rm -rf lib/ && npm run build:esm && npm run build:cjs",
     "build:esm": "tsc",
@@ -15,7 +31,9 @@
     "prettier": "prettier --list-different 'src/**/*.{ts,tsx,json,css,md}'",
     "coverage": "exit 0",
     "test": "react-scripts test",
-    "flow": "exit 0",
+    "lint-check": "npx eslint --max-warnings 0 \"src/**/*.@(tsx|ts|jsx|js)\"",
+    "style-check": "npx prettier --list-different \"src/**/*.@(tsx|ts|jsx|js)\"",
+    "tsc-check": "tsc --noEmit --skipLibCheck",
     "dist-package": "./tools/dist-package.sh",
     "test-dist-package": "./tools/test-dist-package.sh",
     "storybook": "start-storybook -p 6006",

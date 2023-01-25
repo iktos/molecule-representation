@@ -13,7 +13,8 @@
     "outDir": "lib/esm",
     "sourceMap": true,
     "strict": true,
-    "target": "es6"
+    "target": "es6",
+    "incremental": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "lib"]
