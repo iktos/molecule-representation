@@ -17,6 +17,7 @@
   },
   "plugins": ["react", "eslint-plugin-react", "@typescript-eslint", "react-hooks"],
   "rules": {
+    "react-hooks/exhaustive-deps": "error",
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-unused-vars": [
       "error",

@@ -72,7 +72,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
           }).then(setRects),
         100,
       );
-    }, [smiles, smarts, atomsToHighlight, onAtomClick, moleculeRef.current, RDKit, clickableAtoms]);
+    }, [smiles, smarts, atomsToHighlight, onAtomClick, RDKit, clickableAtoms]);
 
     useEffect(() => {
       if (!RDKit) return;
@@ -93,7 +93,20 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
         : get_svg(drawingDetails, RDKit);
 
       if (svg) setSvgContent(appendRectsToSvg(svg, rects));
-    }, [smiles, rects, atomsToHighlight, bondsToHighlight, width, height, RDKit]);
+    }, [
+      smiles,
+      smarts,
+      rects,
+      atomsToHighlight,
+      addAtomIndices,
+      details,
+      onAtomClick,
+      bondsToHighlight,
+      width,
+      height,
+      RDKit,
+      clickableAtoms,
+    ]);
 
     return (
       <div
