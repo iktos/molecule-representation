@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import React, { PropsWithChildren } from 'react';
+import React from 'react';
 import { RDKitProvider } from '../../contexts';
 import MoleculeRepresentation, { MoleculeRepresentationProps } from './MoleculeRepresentation';
 
