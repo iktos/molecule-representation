@@ -1,6 +1,6 @@
 import React, { CSSProperties, memo, useEffect, useRef, useState } from 'react';
 import { useRDKit } from '../../hooks';
-import { ClickableAtoms, get_svg, get_svg_from_smarts } from '../../utils/draw';
+import { ClickableAtoms, DrawSmilesSVGProps, get_svg, get_svg_from_smarts } from '../../utils/draw';
 import { appendRectsToSvg, Rect } from '../../utils/html';
 import { get_molecule_details, is_valid_smiles } from '../../utils/molecule';
 
@@ -76,35 +76,21 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
 
     useEffect(() => {
       if (!RDKit) return;
+      const drawingDetails: DrawSmilesSVGProps = {
+        smiles: smarts || (smiles as string),
+        width,
+        height,
+        details: { ...details, addAtomIndices },
+        atomsToHighlight,
+        bondsToHighlight,
+        isClickable: !!onAtomClick,
+        clickableAtoms,
+      };
       const svg = smarts
         ? is_valid_smiles(smarts, RDKit)
-          ? get_svg(
-              {
-                smiles: smarts as string,
-                width,
-                height,
-                details: { ...details, addAtomIndices },
-                atomsToHighlight,
-                bondsToHighlight,
-                isClickable: !!onAtomClick,
-                clickableAtoms,
-              },
-              RDKit,
-            )
+          ? get_svg(drawingDetails, RDKit)
           : get_svg_from_smarts({ smarts, width, height }, RDKit)
-        : get_svg(
-            {
-              smiles: smiles as string,
-              width,
-              height,
-              details: { ...details, addAtomIndices },
-              atomsToHighlight,
-              bondsToHighlight,
-              isClickable: !!onAtomClick,
-              clickableAtoms,
-            },
-            RDKit,
-          );
+        : get_svg(drawingDetails, RDKit);
 
       if (svg) setSvgContent(appendRectsToSvg(svg, rects));
     }, [smiles, rects, atomsToHighlight, bondsToHighlight, width, height, RDKit]);

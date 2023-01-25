@@ -95,7 +95,7 @@ const DEFAULT_DRAWING_DETAILS = {
   fixedBondLength: 50,
 };
 
-interface DrawSmilesSVGProps {
+export interface DrawSmilesSVGProps {
   smiles: string;
   width: number;
   height: number;
