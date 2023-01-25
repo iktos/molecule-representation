@@ -1,0 +1,26 @@
+name: lint - test
+
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        # no need to test multiple versions as this is just linting and testing build for now
+        node-version: [16.x]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test
+      - run: npm run lint-check
+      - run: npm run style-check
+      - run: npm run tsc-check
+      - run: npm run dist-package && npm run test-dist-package
