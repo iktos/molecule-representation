@@ -4,10 +4,10 @@ Interactif molecule represnetations as react components
 
 #### usage
 
-wrap your components in an RDKit provider
+wrap your components in an RDKit provider from [@iktos/rdkit-provider](https://github.com/iktos/rdkit-provider)
 
 ```html
-import { RDKitProvider } from '@iktos/molecule-representation';
+import { RDKitProvider } from '@iktos/rdkit-provider';
 <RDKitProvider>
   <Component />
 </RDKitProvider>
