@@ -5,7 +5,7 @@ on:
     types: [created]
 
 jobs:
-  publish-gpr:
+  publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
