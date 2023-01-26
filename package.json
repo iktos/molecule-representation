@@ -68,6 +68,7 @@
     "jest": "^29.3.1",
     "jest-environment-jsdom": "^29.3.1",
     "react": "^18.2.0",
+    "@iktos/rdkit-provider": "^0.1.0",
     "react-dom": "^18.2.0",
     "react-scripts": "^5.0.1",
     "typescript": "^4.9.4"
@@ -75,6 +76,7 @@
   "peerDependencies": {
     "@rdkit/rdkit": "^2022.9.3-1.0.0",
     "react": ">=17.0.2",
-    "react-dom": ">=17.0.2"
+    "react-dom": ">=17.0.2",
+    "@iktos/rdkit-provider": "^0.1.0"
   }
 }

@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { RDKitProvider } from '../../contexts';
+import { RDKitProvider } from '@iktos/rdkit-provider';
 import MoleculeRepresentation, { MoleculeRepresentationProps } from './MoleculeRepresentation';
 
 const baseProps: MoleculeRepresentationProps = {
