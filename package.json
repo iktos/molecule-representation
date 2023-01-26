@@ -1,6 +1,6 @@
 {
   "name": "@iktos/molecule-representation",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "exports interactif molecule represnetations as react components",
   "main": "lib/cjs/index.js",
   "module": "lib/esm/index.js",
