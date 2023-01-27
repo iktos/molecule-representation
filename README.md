@@ -38,6 +38,6 @@ const props: MoleculeRepresentationProps = {
 launch storybook to see all available options
 
 ```bash
-    yarn install
-    yarn storybook
+    npm install
+    npm run storybook
 ```

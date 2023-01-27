@@ -19,7 +19,7 @@ repos:
     hooks:
       - id: tsc
         name: tsc check
-        entry: yarn tsc-check
+        entry: npx tsc-check
         files: "src/.*\\.(tsx?|jsx?)$"
         # can not "tsc-check" only staged files because of https://github.com/microsoft/TypeScript/issues/27379
         pass_filenames: false
