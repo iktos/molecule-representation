@@ -16,16 +16,16 @@ export const computeClickingAreaForAtoms = async ({
 }) => {
   if (!parentDiv) return [];
 
-  const atomsToIgnore = clickableAtoms
+  let atomsToIgnore = clickableAtoms
     ? new Set([...Array(numAtoms).keys()].filter((atomIdx) => !clickableAtoms.includes(atomIdx)))
     : null;
   const rectsForHiddenAtoms = await computeClickingAreaForHiddenAtoms(numAtoms, parentDiv, atomsToIgnore);
   const processedHiddenAtomsIds = rectsForHiddenAtoms.map((rect) => getAtomIdxFromClickableId(rect.id)).map(parseFloat);
-  const rectsForVisibleAtoms = await computeClickingAreaForVisibleAtoms(
-    numAtoms,
-    parentDiv,
-    new Set(processedHiddenAtomsIds),
-  );
+  atomsToIgnore = atomsToIgnore
+    ? new Set([...atomsToIgnore, ...processedHiddenAtomsIds])
+    : new Set(processedHiddenAtomsIds);
+  const rectsForVisibleAtoms = await computeClickingAreaForVisibleAtoms(numAtoms, parentDiv, atomsToIgnore);
+
   return [...rectsForVisibleAtoms, ...rectsForHiddenAtoms];
 };
 
