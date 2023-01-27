@@ -98,6 +98,7 @@ Clickable.args = {
 export const ClickableSetOfAtoms = TemplateWithOnAtomClick.bind({});
 ClickableSetOfAtoms.args = {
   ...PROPS,
+  addAtomIndices: true,
   clickableAtoms: {
     clickableAtomsIds: [0, 1, 2, 3, 6, 7, 9, 12, 4],
     clickableAtomsBackgroundColor: [53 / 256, 141 / 256, 231 / 256, 0.5],
