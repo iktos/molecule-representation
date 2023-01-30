@@ -9,6 +9,7 @@ import {
   computeClickingAreaForAtoms,
   getAtomIdxFromClickableId,
 } from './MoleculeRepresentation.service';
+import { Spinner } from '../Spinner';
 
 interface MoleculeRepresentationBaseProps {
   addAtomIndices?: boolean;
@@ -107,6 +108,8 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       RDKit,
       clickableAtoms,
     ]);
+
+    if (!svgContent) return <Spinner width={width} height={height} />;
 
     return (
       <div
