@@ -3,7 +3,7 @@ import { useArgs } from '@storybook/client-api';
 import React from 'react';
 
 import { MoleculeRepresentation, MoleculeRepresentationProps } from './MoleculeRepresentation';
-import { RDKitProvider } from '@iktos/rdkit-provider';
+import { RDKitProvider } from '@iktos-oss/rdkit-provider';
 
 export default {
   title: 'components/molecules/MoleculeRepresentation',
