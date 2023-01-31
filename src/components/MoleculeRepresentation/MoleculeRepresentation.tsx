@@ -1,5 +1,5 @@
 import React, { CSSProperties, memo, useEffect, useRef, useState } from 'react';
-import { useRDKit } from '@iktos/rdkit-provider';
+import { useRDKit } from '@iktos-oss/rdkit-provider';
 import { ClickableAtoms, DrawSmilesSVGProps, get_svg, get_svg_from_smarts } from '../../utils/draw';
 import { appendRectsToSvg, Rect } from '../../utils/html';
 import { get_molecule_details, is_valid_smiles } from '../../utils/molecule';

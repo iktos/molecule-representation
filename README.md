@@ -4,10 +4,10 @@ Interactif molecule represnetations as react components
 
 #### usage
 
-wrap your components in an RDKit provider from [@iktos/rdkit-provider](https://github.com/iktos/rdkit-provider)
+wrap your components in an RDKit provider from [@iktos-oss/rdkit-provider](https://github.com/iktos/rdkit-provider)
 
 ```html
-import { RDKitProvider } from '@iktos/rdkit-provider';
+import { RDKitProvider } from '@iktos-oss/rdkit-provider';
 <RDKitProvider>
   <Component />
 </RDKitProvider>
@@ -16,7 +16,7 @@ import { RDKitProvider } from '@iktos/rdkit-provider';
 render molecule
 
 ```js
-import { MoleculeRepresentation, MoleculeRepresentationProps } from '@iktos/molecule-representation';
+import { MoleculeRepresentation, MoleculeRepresentationProps } from '@iktos-oss/molecule-representation';
 const props: MoleculeRepresentationProps = {
   smiles: 'Cc1cccc(-c2ccccc2)c1',
   addAtomIndices: true,
