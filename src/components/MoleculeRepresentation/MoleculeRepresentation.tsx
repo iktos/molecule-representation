@@ -9,6 +9,7 @@ import {
   computeClickingAreaForAtoms,
   getAtomIdxFromClickableId,
 } from './MoleculeRepresentation.service';
+import ZoomWrapper from './ZoomWrapper';
 import { Spinner } from '../Spinner';
 
 interface MoleculeRepresentationBaseProps {
@@ -22,6 +23,7 @@ interface MoleculeRepresentationBaseProps {
   onAtomClick?: (atomId: string) => void;
   style?: CSSProperties;
   width: number;
+  zoomable?: boolean;
 }
 
 interface SmilesRepresentationProps extends MoleculeRepresentationBaseProps {
@@ -50,6 +52,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     smiles,
     style,
     width,
+    zoomable = false,
     ...restOfProps
   }: MoleculeRepresentationProps) => {
     const { RDKit } = useRDKit();
@@ -111,7 +114,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
 
     if (!svgContent) return <Spinner width={width} height={height} />;
 
-    return (
+    const content = (
       <div
         data-testid='clickable-molecule'
         ref={moleculeRef}
@@ -131,6 +134,15 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
         style={{ ...style, height, width }}
       ></div>
     );
+
+    if (zoomable)
+      return (
+        <ZoomWrapper height={height} width={width} showZoomCircle={!onAtomClick}>
+          {content}
+        </ZoomWrapper>
+      );
+
+    return content;
   },
 );
 

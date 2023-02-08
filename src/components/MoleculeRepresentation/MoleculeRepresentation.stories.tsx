@@ -90,6 +90,12 @@ FromSmarts.args = {
   smiles: '****CO',
 };
 
+export const Zoomable = Template.bind({});
+Zoomable.args = {
+  ...PROPS,
+  zoomable: true,
+};
+
 export const Clickable = TemplateWithOnAtomClick.bind({});
 Clickable.args = {
   ...PROPS,
