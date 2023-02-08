@@ -11,7 +11,7 @@ export const computeClickingAreaForAtoms = async ({
   clickableAtoms,
 }: {
   numAtoms: number;
-  parentDiv: HTMLDivElement | null;
+  parentDiv: SVGElement | null;
   clickableAtoms?: number[];
 }) => {
   if (!parentDiv) return [];
@@ -36,7 +36,7 @@ const getBondSelector = (atomIdx: number) => `.${CLICKABLE_MOLECULE_CLASSNAME} .
 
 const computeClickingAreaForVisibleAtoms = async (
   numAtoms: number,
-  parentDiv: HTMLDivElement,
+  parentDiv: SVGElement,
   atomsToIgnore: Set<number> | null = null,
 ) => {
   const rects: Rect[] = [];
@@ -66,7 +66,7 @@ const computeClickingAreaForVisibleAtoms = async (
 
 const computeClickingAreaForHiddenAtoms = async (
   numAtoms: number,
-  parentDiv: HTMLDivElement,
+  parentDiv: SVGElement,
   atomsToIgnore: Set<number> | null = null,
 ) => {
   const rects: Rect[] = [];
