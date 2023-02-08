@@ -61,7 +61,7 @@ const ZoomWrapper: React.FC<ZoomWrapperProps> = ({ children, height, width, show
     });
   }, []);
 
-  const handleOnWheel = useCallback((e: React.WheelEvent) => {
+  const handleOnWheel = useCallback((e: WheelEvent) => {
     if (!e.ctrlKey) return;
     setZoomEvent({ delta: -e.deltaY });
     e.preventDefault();
