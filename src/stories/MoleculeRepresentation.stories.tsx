@@ -144,6 +144,12 @@ FromSmarts.args = {
   rdkitProviderProps: RDKitProviderCachingProps,
 };
 
+export const Zoomable = Template.bind({});
+Zoomable.args = {
+  ...PROPS,
+  zoomable: true,
+};
+
 const alignmentHighlightColor: RDKitColor = [0.2, 0.8, 0.7, 0.7];
 export const WithSubstructureAlignmentTemplate = TemplateOfListOfMoleculesRepresentations.bind({});
 WithSubstructureAlignmentTemplate.args = {

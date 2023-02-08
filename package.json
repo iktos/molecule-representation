@@ -79,5 +79,9 @@
     "react": ">=17.0.2",
     "react-dom": ">=17.0.2",
     "@iktos-oss/rdkit-provider": "^1.2.3"
+  },
+  "dependencies": {
+    "@visx/zoom": "^3.0.0",
+    "react-inlinesvg": "^3.0.1"
   }
 }
