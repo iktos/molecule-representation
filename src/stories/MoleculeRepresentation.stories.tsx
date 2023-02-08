@@ -22,6 +22,7 @@ const PROPS: MoleculeRepresentationProps = {
   height: 200,
   width: 300,
   onAtomClick: undefined,
+  zoomable: false,
 };
 
 const RDKitProviderCachingProps: RDKitProviderProps = {
@@ -153,6 +154,15 @@ DrawSmartsAsSmiles.args = {
     showSmartsAsSmiles: true,
     smiles: undefined,
     alignmentDetails: undefined,
+  },
+  rdkitProviderProps: RDKitProviderCachingProps,
+};
+
+export const Zoomable = Template.bind({});
+Zoomable.args = {
+  moleculeRepresetnationProps: {
+    ...PROPS,
+    zoomable: true,
   },
   rdkitProviderProps: RDKitProviderCachingProps,
 };
