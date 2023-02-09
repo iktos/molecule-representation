@@ -1,4 +1,4 @@
-import React, { CSSProperties, memo, useEffect, useRef, useState } from 'react';
+import React, { CSSProperties, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useRDKit } from '@iktos-oss/rdkit-provider';
 import { ClickableAtoms, DrawSmilesSVGProps, get_svg, get_svg_from_smarts } from '../../utils/draw';
 import { appendRectsToSvg, Rect } from '../../utils/html';
@@ -56,10 +56,11 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     const moleculeRef = useRef<HTMLDivElement>(null);
     const [svgContent, setSvgContent] = useState('');
     const [rects, setRects] = useState<Array<Rect>>([]);
+    const isClickable = useMemo(() => !!onAtomClick, [onAtomClick]);
 
     useEffect(() => {
       if (!RDKit) return;
-      if (!onAtomClick) return;
+      if (!isClickable) return;
       const structureToDraw = smiles || (smarts as string);
       const moleculeDetails = get_molecule_details(structureToDraw, RDKit);
       if (!moleculeDetails) return;
@@ -73,7 +74,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
           }).then(setRects),
         100,
       );
-    }, [smiles, smarts, atomsToHighlight, onAtomClick, RDKit, clickableAtoms]);
+    }, [smiles, smarts, RDKit, isClickable, clickableAtoms]);
 
     useEffect(() => {
       if (!RDKit) return;
@@ -84,7 +85,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
         details: { ...details, addAtomIndices },
         atomsToHighlight,
         bondsToHighlight,
-        isClickable: !!onAtomClick,
+        isClickable,
         clickableAtoms,
       };
       const svg = smarts
@@ -92,7 +93,6 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
           ? get_svg(drawingDetails, RDKit)
           : get_svg_from_smarts({ smarts, width, height }, RDKit)
         : get_svg(drawingDetails, RDKit);
-
       if (svg) setSvgContent(appendRectsToSvg(svg, rects));
     }, [
       smiles,
@@ -101,7 +101,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       atomsToHighlight,
       addAtomIndices,
       details,
-      onAtomClick,
+      isClickable,
       bondsToHighlight,
       width,
       height,
