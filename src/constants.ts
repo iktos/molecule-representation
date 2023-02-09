@@ -1,4 +1,4 @@
-export const MAX_CACHED_MOLECULES_SVGS = 1_000;
+export const MAX_CACHED_JSMOLS = 1_000;
 
 export type RDKitColor = number[];
 export const TRANSPARANT_RDKIT_COLOR: RDKitColor = [1, 1, 1, 0];
