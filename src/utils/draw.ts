@@ -1,15 +1,11 @@
 import { RDKitModule } from '@rdkit/rdkit';
 import { HIGHLIGHT_RDKIT_COLORS, RDKitColor, TRANSPARANT_RDKIT_COLOR } from '../constants';
-import { getMoleculeSvgFromCache, storeMoleculeSvgCache } from './caching';
 import { get_canonical_form_for_structure, get_molecule, get_molecule_details } from './molecule';
 
 export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
   if (!params.smiles) return null;
   const canonicalSmiles = get_canonical_form_for_structure(params.smiles, RDKit);
   if (!canonicalSmiles) return null;
-  const cacheParams = { ...params, smiles: canonicalSmiles };
-  const svgFromCache = getMoleculeSvgFromCache(cacheParams);
-  if (svgFromCache) return svgFromCache;
 
   const { width, height, details = {}, atomsToHighlight, bondsToHighlight, isClickable, clickableAtoms } = params;
   const highlightBondColors = getHighlightColors(bondsToHighlight);
@@ -41,13 +37,10 @@ export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
       highlightBondColors,
     });
     const svg = mol.get_svg_with_highlights(rdkitDrawingOptions);
-    storeMoleculeSvgCache(cacheParams, svg);
     return svg;
   } catch (error) {
     console.error(error);
     return null;
-  } finally {
-    if (mol) mol.delete();
   }
 };
 
@@ -57,13 +50,9 @@ export const get_svg_from_smarts = (params: DrawSmartsSVGProps, RDKit: RDKitModu
 
   const canonicalSmarts = get_canonical_form_for_structure(params.smarts, RDKit);
   if (!canonicalSmarts) return null;
-  const cacheParams = { ...params, smarts: canonicalSmarts };
-  const svgFromCache = getMoleculeSvgFromCache(cacheParams);
-  if (svgFromCache) return svgFromCache;
 
   const smartsMol = RDKit.get_qmol(canonicalSmarts);
   const svg = smartsMol.get_svg(params.width, params.height);
-  storeMoleculeSvgCache(cacheParams, svg);
   smartsMol.delete();
   return svg;
 };

@@ -95,6 +95,13 @@ Clickable.args = {
   ...PROPS,
 };
 
+export const BigClickableMolecule = TemplateWithOnAtomClick.bind({});
+BigClickableMolecule.args = {
+  ...PROPS,
+  smiles:
+    'Oc7c(O)cc%21c(c7O)-c6c(O)c(O)c(O)cc6C(=O)OCC(C(OC%21=O)C%15OC(=O)c(cc%16O)c-4c(O)c%16O)OC(C%15OC(=O)c(c-4c%23O)cc(O)c%23O)Oc(c1O)c(c(c(O)c1O)-c(c%10O)c%13cc(O)c%10O)C(=O)OC%11C(COC%13=O)OC(C(OC(=O)c(cc(O)c%19O)c(c%19O)-c%12c8O)C%11OC(=O)c%12cc(O)c8O)OC(=O)c(cc%20O)cc(c%20O)Oc(c(O)c(O)c3O)c%18c3-c5c(O)c(O)c(O)cc5C(=O)OCC(OC(OC(=O)c(cc%22O)cc(O)c%22O)C%17OC(=O)c%14cc(O)c2O)C(OC%18=O)C%17OC(=O)c9cc(O)c(O)c(O)c9-c%14c2O',
+};
+
 export const ClickableSetOfAtoms = TemplateWithOnAtomClick.bind({});
 ClickableSetOfAtoms.args = {
   ...PROPS,

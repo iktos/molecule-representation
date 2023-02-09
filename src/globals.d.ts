@@ -1,7 +1,9 @@
 /* eslint-disable no-var */
 
+import { JSMol } from '@rdkit/rdkit';
+
 export {};
 
 declare global {
-  var moleculeRepresentationSVGCache: Record<string, string> | null;
+  var jsMolCache: Record<string, JSMol> | null;
 }
