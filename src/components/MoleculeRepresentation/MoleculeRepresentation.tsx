@@ -10,7 +10,6 @@ import {
   getAtomIdxFromClickableId,
 } from './MoleculeRepresentation.service';
 import { Spinner } from '../Spinner';
-import { cleanJSMolCache } from '../../utils/caching';
 
 interface MoleculeRepresentationBaseProps {
   addAtomIndices?: boolean;
@@ -58,8 +57,6 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     const [svgContent, setSvgContent] = useState('');
     const [rects, setRects] = useState<Array<Rect>>([]);
     const isClickable = useMemo(() => !!onAtomClick, [onAtomClick]);
-
-    useEffect(() => cleanJSMolCache, []);
 
     useEffect(() => {
       if (!RDKit) return;

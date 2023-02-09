@@ -1,5 +1,5 @@
 import { RDKitModule } from '@rdkit/rdkit';
-import { getJSMolFromCache, storeJSMolInCache } from './caching';
+import { get_molecule } from '@iktos-oss/rdkit-provider';
 
 export const get_molecule_details = (
   smiles: string,
@@ -36,19 +36,4 @@ const get_canonical_smiles = (smiles: string, RDKit: RDKitModule): string | null
   if (!mol) return null;
   const cannonicalSmiles = mol.get_smiles();
   return cannonicalSmiles;
-};
-
-export const get_molecule = (smiles: string, RDKit: RDKitModule) => {
-  const cachedMolecule = getJSMolFromCache(smiles);
-  if (cachedMolecule) return cachedMolecule;
-  if (!smiles) return null;
-  if (!RDKit) return null;
-
-  const tempMolecule = RDKit.get_mol(smiles);
-  const mdlWithCoords = tempMolecule.get_new_coords(true);
-  tempMolecule.delete();
-
-  const mol = RDKit.get_mol(mdlWithCoords);
-  storeJSMolInCache(smiles, mol);
-  return mol;
 };
