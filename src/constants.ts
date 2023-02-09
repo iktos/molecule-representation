@@ -1,5 +1,3 @@
-export const MAX_CACHED_JSMOLS = 1_000;
-
 export type RDKitColor = number[];
 export const TRANSPARANT_RDKIT_COLOR: RDKitColor = [1, 1, 1, 0];
 export const HIGHLIGHT_RDKIT_COLORS: RDKitColor[] = [

@@ -1,6 +1,7 @@
+import { get_molecule } from '@iktos-oss/rdkit-provider';
 import { RDKitModule } from '@rdkit/rdkit';
 import { HIGHLIGHT_RDKIT_COLORS, RDKitColor, TRANSPARANT_RDKIT_COLOR } from '../constants';
-import { get_canonical_form_for_structure, get_molecule, get_molecule_details } from './molecule';
+import { get_canonical_form_for_structure, get_molecule_details } from './molecule';
 
 export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
   if (!params.smiles) return null;
@@ -22,9 +23,8 @@ export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
   const atoms = isClickable && moleculeDetails ? [...Array(moleculeDetails.numAtoms).keys()] : atomsToHighlight?.flat();
   const bonds = bondsToHighlight?.flat();
 
-  let mol = null;
   try {
-    mol = get_molecule(canonicalSmiles, RDKit);
+    const mol = get_molecule(canonicalSmiles, RDKit);
     if (!mol) return null;
     const rdkitDrawingOptions = JSON.stringify({
       ...DEFAULT_DRAWING_DETAILS,
