@@ -7,6 +7,7 @@ import {
   MoleculeRepresentationProps,
 } from '../components/MoleculeRepresentation/MoleculeRepresentation';
 import { RDKitProvider } from '@iktos-oss/rdkit-provider';
+import { MOLECULES, RANOLAZINE_SMILES, SEVEN_HIGHLIGHTS_RANOLAZINE } from './fixtures/molecules';
 
 export default {
   title: 'components/molecules/MoleculeRepresentation',
@@ -23,6 +24,20 @@ const PROPS: MoleculeRepresentationProps = {
 const Template: Story<MoleculeRepresentationProps> = (args) => (
   <RDKitProvider cache={{ enableJsMolCaching: true, maxJsMolsCached: 30 }}>
     <MoleculeRepresentation {...args} />
+  </RDKitProvider>
+);
+
+const TemplateOfListOfMoleculesRepresentations: Story<{
+  listOfSmiles: string[];
+  listOfProps: MoleculeRepresentationProps[];
+}> = ({ listOfSmiles, listOfProps }: { listOfSmiles: string[]; listOfProps: MoleculeRepresentationProps[] }) => (
+  <RDKitProvider cache={{ enableJsMolCaching: true, maxJsMolsCached: 30 }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+      {listOfSmiles.map((smiles, idx) => (
+        // eslint-disable-next-line react/jsx-key
+        <MoleculeRepresentation {...listOfProps[idx]} smiles={smiles} smarts={undefined} />
+      ))}
+    </div>
   </RDKitProvider>
 );
 
@@ -113,4 +128,22 @@ ClickableSetOfAtoms.args = {
     clickableAtomsIds: [0, 1, 2, 3, 6, 7, 9, 12, 4],
     clickableAtomsBackgroundColor: [53 / 256, 141 / 256, 231 / 256, 0.5],
   },
+};
+
+export const ThousandMolecules = TemplateOfListOfMoleculesRepresentations.bind({});
+ThousandMolecules.args = {
+  listOfSmiles: MOLECULES,
+  listOfProps: Array(MOLECULES.length)
+    .fill(null)
+    .map(() => PROPS),
+};
+
+export const SevenHundredHighlightsForRanolazine = TemplateOfListOfMoleculesRepresentations.bind({});
+SevenHundredHighlightsForRanolazine.args = {
+  listOfSmiles: Array(SEVEN_HIGHLIGHTS_RANOLAZINE.length)
+    .fill(null)
+    .map(() => RANOLAZINE_SMILES),
+  listOfProps: Array(SEVEN_HIGHLIGHTS_RANOLAZINE.length)
+    .fill(null)
+    .map((_, idx) => ({ ...PROPS, atomsToHighlight: [SEVEN_HIGHLIGHTS_RANOLAZINE[idx]] })),
 };
