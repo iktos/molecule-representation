@@ -2,7 +2,10 @@ import { Meta, Story } from '@storybook/react';
 import { useArgs } from '@storybook/client-api';
 import React from 'react';
 
-import { MoleculeRepresentation, MoleculeRepresentationProps } from './MoleculeRepresentation';
+import {
+  MoleculeRepresentation,
+  MoleculeRepresentationProps,
+} from '../components/MoleculeRepresentation/MoleculeRepresentation';
 import { RDKitProvider } from '@iktos-oss/rdkit-provider';
 
 export default {
