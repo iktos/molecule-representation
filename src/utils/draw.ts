@@ -23,8 +23,9 @@ export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
   const atoms = isClickable && moleculeDetails ? [...Array(moleculeDetails.numAtoms).keys()] : atomsToHighlight?.flat();
   const bonds = bondsToHighlight?.flat();
 
+  let mol = null;
   try {
-    const mol = get_molecule(canonicalSmiles, RDKit);
+    mol = get_molecule(canonicalSmiles, RDKit);
     if (!mol) return null;
     const rdkitDrawingOptions = JSON.stringify({
       ...DEFAULT_DRAWING_DETAILS,
@@ -41,6 +42,10 @@ export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
   } catch (error) {
     console.error(error);
     return null;
+  } finally {
+    if (!globalThis.rdkitProviderGlobals.jsMolCacheEnabled && mol) {
+      mol.delete();
+    }
   }
 };
 

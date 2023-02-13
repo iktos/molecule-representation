@@ -18,7 +18,7 @@ const PROPS: MoleculeRepresentationProps = {
 };
 
 const Template: Story<MoleculeRepresentationProps> = (args) => (
-  <RDKitProvider>
+  <RDKitProvider cache={{ enableJsMolCaching: true, maxJsMolsCached: 30 }}>
     <MoleculeRepresentation {...args} />
   </RDKitProvider>
 );
@@ -50,7 +50,7 @@ const TemplateWithOnAtomClick: Story<MoleculeRepresentationProps> = (args) => {
     }
   };
   return (
-    <RDKitProvider>
+    <RDKitProvider cache={{ enableJsMolCaching: true, maxJsMolsCached: 30 }}>
       <MoleculeRepresentation {...args} onAtomClick={onAtomClick} />
     </RDKitProvider>
   );
