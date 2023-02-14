@@ -1,4 +1,4 @@
-import { get_molecule } from '@iktos-oss/rdkit-provider';
+import { get_molecule, release_molecule } from '@iktos-oss/rdkit-provider';
 import { RDKitModule } from '@rdkit/rdkit';
 import { HIGHLIGHT_RDKIT_COLORS, RDKitColor, TRANSPARANT_RDKIT_COLOR } from '../constants';
 import { get_canonical_form_for_structure, get_molecule_details } from './molecule';
@@ -43,8 +43,8 @@ export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
     console.error(error);
     return null;
   } finally {
-    if (!globalThis.rdkitProviderGlobals.jsMolCacheEnabled && mol) {
-      mol.delete();
+    if (mol) {
+      release_molecule(mol);
     }
   }
 };
