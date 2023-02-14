@@ -2,18 +2,27 @@
 
 Interactif molecule represnetations as react components
 
-#### usage
+# usage
 
-wrap your components in an RDKit provider from [@iktos-oss/rdkit-provider](https://github.com/iktos/rdkit-provider)
+#### wrap your components in an RDKit provider from [@iktos-oss/rdkit-provider](https://github.com/iktos/rdkit-provider)
 
 ```html
 import { RDKitProvider } from '@iktos-oss/rdkit-provider';
 <RDKitProvider>
   <Component />
-</RDKitProvider>
+</RDKitProvider>`
 ```
 
-render molecule
+For better preformance we recommend enabling the caching of rdkitjs JsMol instances, this can be done using RDKitProvider
+```html
+import { RDKitProvider } from '@iktos-oss/rdkit-provider';
+<RDKitProvider  cache={{ enableJsMolCaching: true, maxJsMolsCached: 30 }}>
+  <Component />
+</RDKitProvider>`
+```
+
+
+#### render molecule
 
 ```js
 import { MoleculeRepresentation, MoleculeRepresentationProps } from '@iktos-oss/molecule-representation';
