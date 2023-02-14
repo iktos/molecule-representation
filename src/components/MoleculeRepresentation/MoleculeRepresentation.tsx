@@ -88,12 +88,15 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
         isClickable,
         clickableAtoms,
       };
-      const svg = smarts
-        ? is_valid_smiles(smarts, RDKit)
-          ? get_svg(drawingDetails, RDKit)
-          : get_svg_from_smarts({ smarts, width, height }, RDKit)
-        : get_svg(drawingDetails, RDKit);
-      if (svg) setSvgContent(appendRectsToSvg(svg, rects));
+      setTimeout(() => {
+        // put workload in a settimeout 0 to avoid blocking the main thread when rendering lots of molecules
+        const svg = smarts
+          ? is_valid_smiles(smarts, RDKit)
+            ? get_svg(drawingDetails, RDKit)
+            : get_svg_from_smarts({ smarts, width, height }, RDKit)
+          : get_svg(drawingDetails, RDKit);
+        if (svg) setSvgContent(appendRectsToSvg(svg, rects));
+      }, 0);
     }, [
       smiles,
       smarts,
