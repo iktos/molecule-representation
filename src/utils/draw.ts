@@ -1,5 +1,6 @@
 import { get_molecule, release_molecule } from '@iktos-oss/rdkit-provider';
-import { RDKitModule } from '@rdkit/rdkit';
+import { JSMol, RDKitModule } from '@rdkit/rdkit';
+import { AlignmentDetails } from '../components';
 import { HIGHLIGHT_RDKIT_COLORS, RDKitColor, TRANSPARANT_RDKIT_COLOR } from '../constants';
 import { get_canonical_form_for_structure, get_molecule_details } from './molecule';
 
@@ -8,7 +9,16 @@ export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
   const canonicalSmiles = get_canonical_form_for_structure(params.smiles, RDKit);
   if (!canonicalSmiles) return null;
 
-  const { width, height, details = {}, atomsToHighlight, bondsToHighlight, isClickable, clickableAtoms } = params;
+  const {
+    width,
+    height,
+    details = {},
+    atomsToHighlight,
+    bondsToHighlight,
+    isClickable,
+    clickableAtoms,
+    alignmentDetails,
+  } = params;
   const highlightBondColors = getHighlightColors(bondsToHighlight);
   const highlightAtomColors = getHighlightColors(atomsToHighlight);
   const moleculeDetails = isClickable ? get_molecule_details(canonicalSmiles, RDKit) : null;
@@ -20,20 +30,32 @@ export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
       highlightAtomColors,
     });
   }
-  const atoms = isClickable && moleculeDetails ? [...Array(moleculeDetails.numAtoms).keys()] : atomsToHighlight?.flat();
-  const bonds = bondsToHighlight?.flat();
+  const atomsToDrawWithHighlight =
+    isClickable && moleculeDetails ? [...Array(moleculeDetails.numAtoms).keys()] : atomsToHighlight?.flat() ?? [];
+  const bondsToDrawWithHighlight = bondsToHighlight?.flat() ?? [];
 
   let mol = null;
   try {
     mol = get_molecule(canonicalSmiles, RDKit);
     if (!mol) return null;
+    if (alignmentDetails) {
+      addAlignmentFromMolBlock({
+        mol,
+        alignmentDetails,
+        highlightAtomColors,
+        atomsToDrawWithHighlight,
+        highlightBondColors,
+        bondsToDrawWithHighlight,
+        RDKit,
+      });
+    }
     const rdkitDrawingOptions = JSON.stringify({
       ...DEFAULT_DRAWING_DETAILS,
       ...details,
       width,
       height,
-      atoms,
-      bonds,
+      atoms: atomsToDrawWithHighlight,
+      bonds: bondsToDrawWithHighlight,
       highlightAtomColors,
       highlightBondColors,
     });
@@ -44,6 +66,10 @@ export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
     return null;
   } finally {
     if (mol) {
+      if (alignmentDetails) {
+        // reset coords as mol could be in cache
+        mol.set_new_coords();
+      }
       release_molecule(mol);
     }
   }
@@ -75,6 +101,67 @@ const getHighlightColors = (items?: number[][]) => {
     }
   }
   return highlightColors;
+};
+
+const addAlignmentFromMolBlock = ({
+  mol,
+  alignmentDetails,
+  highlightAtomColors,
+  atomsToDrawWithHighlight,
+  highlightBondColors,
+  bondsToDrawWithHighlight,
+  RDKit,
+}: {
+  mol: JSMol;
+  alignmentDetails: AlignmentDetails;
+  highlightAtomColors: HighlightColors;
+  highlightBondColors: HighlightColors;
+  atomsToDrawWithHighlight: number[];
+  bondsToDrawWithHighlight: number[];
+  RDKit: RDKitModule;
+}) => {
+  const molToAlignWith = get_molecule(alignmentDetails.molBlock, RDKit);
+  if (!molToAlignWith) return;
+  mol.generate_aligned_coords(molToAlignWith, true);
+  if (!alignmentDetails.highlightColor) return;
+  const { atoms: molblockAtomsToHighlight, bonds: molblockBondsToHighlight } = JSON.parse(
+    mol.get_substruct_match(molToAlignWith),
+  );
+  if (molblockAtomsToHighlight) {
+    addAtomsOrBondsToHighlight({
+      indicies: molblockAtomsToHighlight,
+      highlightColors: highlightAtomColors,
+      indiciesToHighlight: atomsToDrawWithHighlight,
+      color: alignmentDetails.highlightColor,
+    });
+  }
+  if (molblockBondsToHighlight) {
+    addAtomsOrBondsToHighlight({
+      indicies: molblockBondsToHighlight,
+      highlightColors: highlightBondColors,
+      indiciesToHighlight: bondsToDrawWithHighlight,
+      color: alignmentDetails.highlightColor,
+    });
+  }
+};
+
+const addAtomsOrBondsToHighlight = ({
+  indicies,
+  indiciesToHighlight,
+  highlightColors,
+  color = HIGHLIGHT_RDKIT_COLORS[0],
+}: {
+  indicies: number[];
+  highlightColors: HighlightColors;
+  indiciesToHighlight: number[];
+  color?: RDKitColor;
+}) => {
+  for (const idx of indicies) {
+    highlightColors[idx] = color;
+    if (!indiciesToHighlight.includes(idx)) {
+      indiciesToHighlight.push(idx);
+    }
+  }
 };
 
 const setHighlightColorForClickableMolecule = ({
@@ -113,6 +200,7 @@ export interface DrawSmilesSVGProps {
   width: number;
   height: number;
   details?: Record<string, unknown>;
+  alignmentDetails?: AlignmentDetails;
   atomsToHighlight?: number[][];
   bondsToHighlight?: number[][];
   isClickable?: boolean;

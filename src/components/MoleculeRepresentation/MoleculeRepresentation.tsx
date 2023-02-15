@@ -10,29 +10,7 @@ import {
   getAtomIdxFromClickableId,
 } from './MoleculeRepresentation.service';
 import { Spinner } from '../Spinner';
-
-interface MoleculeRepresentationBaseProps {
-  addAtomIndices?: boolean;
-  atomsToHighlight?: number[][];
-  bondsToHighlight?: number[][];
-  clickableAtoms?: ClickableAtoms;
-  details?: Record<string, unknown>;
-  height: number;
-  id?: string;
-  onAtomClick?: (atomId: string) => void;
-  style?: CSSProperties;
-  width: number;
-}
-
-interface SmilesRepresentationProps extends MoleculeRepresentationBaseProps {
-  smarts?: never;
-  smiles: string;
-}
-
-interface SmartsRepresentationProps extends MoleculeRepresentationBaseProps {
-  smarts: string;
-  smiles?: never;
-}
+import { RDKitColor } from '../../constants';
 
 export type MoleculeRepresentationProps = SmilesRepresentationProps | SmartsRepresentationProps;
 
@@ -48,6 +26,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     onAtomClick,
     smarts,
     smiles,
+    alignmentDetails,
     style,
     width,
     ...restOfProps
@@ -83,6 +62,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
         width,
         height,
         details: { ...details, addAtomIndices },
+        alignmentDetails,
         atomsToHighlight,
         bondsToHighlight,
         isClickable,
@@ -110,6 +90,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       height,
       RDKit,
       clickableAtoms,
+      alignmentDetails,
     ]);
 
     if (!svgContent) return <Spinner width={width} height={height} />;
@@ -139,3 +120,33 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
 
 MoleculeRepresentation.displayName = 'MoleculeRepresentation';
 export default MoleculeRepresentation;
+
+interface MoleculeRepresentationBaseProps {
+  addAtomIndices?: boolean;
+  atomsToHighlight?: number[][];
+  bondsToHighlight?: number[][];
+  clickableAtoms?: ClickableAtoms;
+  details?: Record<string, unknown>;
+  height: number;
+  id?: string;
+  onAtomClick?: (atomId: string) => void;
+  style?: CSSProperties;
+  width: number;
+}
+
+interface SmilesRepresentationProps extends MoleculeRepresentationBaseProps {
+  smarts?: never;
+  smiles: string;
+  alignmentDetails?: AlignmentDetails;
+}
+
+interface SmartsRepresentationProps extends MoleculeRepresentationBaseProps {
+  smarts: string;
+  smiles?: never;
+  alignmentDetails?: never;
+}
+
+export interface AlignmentDetails {
+  molBlock: string;
+  highlightColor?: RDKitColor;
+}
