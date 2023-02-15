@@ -7,7 +7,9 @@ import {
   MoleculeRepresentationProps,
 } from '../components/MoleculeRepresentation/MoleculeRepresentation';
 import { RDKitProvider } from '@iktos-oss/rdkit-provider';
-import { MOLECULES, RANOLAZINE_SMILES, SEVEN_HIGHLIGHTS_RANOLAZINE } from './fixtures/molecules';
+import { BIG_MOLECULE, MOLECULES, RANOLAZINE_SMILES, SEVEN_HIGHLIGHTS_RANOLAZINE } from './fixtures/molecules';
+import { RDKitColor } from '../constants';
+import { CCO_MOL_BLOCK, SMILES_TO_ALIGN_CCO_AGAINST } from './fixtures/molblock';
 
 export default {
   title: 'components/molecules/MoleculeRepresentation',
@@ -35,7 +37,9 @@ const TemplateOfListOfMoleculesRepresentations: Story<{
     <div style={{ display: 'flex', flexWrap: 'wrap' }}>
       {listOfSmiles.map((smiles, idx) => (
         // eslint-disable-next-line react/jsx-key
-        <MoleculeRepresentation {...listOfProps[idx]} smiles={smiles} smarts={undefined} />
+        <div style={{ width: '25%' }}>
+          <MoleculeRepresentation {...listOfProps[idx]} smiles={smiles} smarts={undefined} />
+        </div>
       ))}
     </div>
   </RDKitProvider>
@@ -108,6 +112,34 @@ FromSmarts.args = {
   smiles: '****CO',
 };
 
+const alignmentHighlightColor: RDKitColor = [0.2, 0.8, 0.7, 0.7];
+export const WithSubstructureAlignmentTemplate = TemplateOfListOfMoleculesRepresentations.bind({});
+WithSubstructureAlignmentTemplate.args = {
+  listOfProps: [
+    {
+      ...PROPS,
+      alignmentDetails: { molBlock: CCO_MOL_BLOCK, highlightColor: alignmentHighlightColor },
+    },
+    {
+      ...PROPS,
+      alignmentDetails: { molBlock: CCO_MOL_BLOCK, highlightColor: alignmentHighlightColor },
+    },
+    {
+      ...PROPS,
+      alignmentDetails: { molBlock: CCO_MOL_BLOCK },
+    },
+    {
+      ...PROPS,
+      alignmentDetails: { molBlock: CCO_MOL_BLOCK, highlightColor: alignmentHighlightColor },
+    },
+    { ...PROPS },
+    { ...PROPS },
+    { ...PROPS },
+    { ...PROPS },
+  ],
+  listOfSmiles: SMILES_TO_ALIGN_CCO_AGAINST,
+};
+
 export const Clickable = TemplateWithOnAtomClick.bind({});
 Clickable.args = {
   ...PROPS,
@@ -116,8 +148,7 @@ Clickable.args = {
 export const BigClickableMolecule = TemplateWithOnAtomClick.bind({});
 BigClickableMolecule.args = {
   ...PROPS,
-  smiles:
-    'Oc7c(O)cc%21c(c7O)-c6c(O)c(O)c(O)cc6C(=O)OCC(C(OC%21=O)C%15OC(=O)c(cc%16O)c-4c(O)c%16O)OC(C%15OC(=O)c(c-4c%23O)cc(O)c%23O)Oc(c1O)c(c(c(O)c1O)-c(c%10O)c%13cc(O)c%10O)C(=O)OC%11C(COC%13=O)OC(C(OC(=O)c(cc(O)c%19O)c(c%19O)-c%12c8O)C%11OC(=O)c%12cc(O)c8O)OC(=O)c(cc%20O)cc(c%20O)Oc(c(O)c(O)c3O)c%18c3-c5c(O)c(O)c(O)cc5C(=O)OCC(OC(OC(=O)c(cc%22O)cc(O)c%22O)C%17OC(=O)c%14cc(O)c2O)C(OC%18=O)C%17OC(=O)c9cc(O)c(O)c(O)c9-c%14c2O',
+  smiles: BIG_MOLECULE,
 };
 
 export const ClickableSetOfAtoms = TemplateWithOnAtomClick.bind({});
