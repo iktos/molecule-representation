@@ -123,7 +123,10 @@ const addAlignmentFromMolBlock = ({
   const molToAlignWith = get_molecule(alignmentDetails.molBlock, RDKit);
   if (!molToAlignWith) return;
   mol.generate_aligned_coords(molToAlignWith, true);
-  if (!alignmentDetails.highlightColor) return;
+  if (!alignmentDetails.highlightColor) {
+    release_molecule(molToAlignWith);
+    return;
+  }
   const { atoms: molblockAtomsToHighlight, bonds: molblockBondsToHighlight } = JSON.parse(
     mol.get_substruct_match(molToAlignWith),
   );
@@ -143,6 +146,7 @@ const addAlignmentFromMolBlock = ({
       color: alignmentDetails.highlightColor,
     });
   }
+  release_molecule(molToAlignWith);
 };
 
 const addAtomsOrBondsToHighlight = ({
