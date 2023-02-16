@@ -1,5 +1,4 @@
 import React, { CSSProperties, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import SVG from 'react-inlinesvg';
 
 import { useRDKit } from '@iktos-oss/rdkit-provider';
 import { ClickableAtoms, DrawSmilesSVGProps, get_svg, get_svg_from_smarts } from '../../utils/draw';
@@ -11,9 +10,10 @@ import {
   computeClickingAreaForAtoms,
   getAtomIdxFromClickableId,
 } from './MoleculeRepresentation.service';
-import ZoomWrapper, { DisplayZoomToolbar, DisplayZoomToolbarStrings } from '../../zoom/ZoomWrapper';
+import ZoomWrapper, { DisplayZoomToolbar, DisplayZoomToolbarStrings } from '../Zoom/ZoomWrapper';
 import { Spinner } from '../Spinner';
 import { RDKitColor } from '../../constants';
+import { createSvgElement } from '../../utils/create-svg-element';
 
 export type MoleculeRepresentationProps = SmilesRepresentationProps | SmartsRepresentationProps;
 
@@ -113,29 +113,25 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
 
     if (!svgContent) return <Spinner width={width} height={height} />;
 
-    const content = (
-      <SVG
-        data-testid='clickable-molecule'
-        innerRef={moleculeRef}
-        {...restOfProps}
-        cacheRequests={false}
-        className={`molecule ${onAtomClick ? CLICKABLE_MOLECULE_CLASSNAME : ''}`}
-        height={height}
-        id={id}
-        onClick={handleOnClick}
-        src={svgContent}
-        style={{ ...style }}
-        title={smiles}
-        width={width}
-      />
-    );
+    const svgElement = createSvgElement(svgContent, {
+      'data-testid': 'clickable-molecule',
+      ref: moleculeRef,
+      ...restOfProps,
+      className: `molecule ${onAtomClick ? CLICKABLE_MOLECULE_CLASSNAME : ''}`,
+      height,
+      id,
+      onClick: handleOnClick,
+      style,
+      title: smiles,
+      width,
+    });
 
     return zoomable ? (
       <ZoomWrapper displayZoomToolbar={displayZoomToolbar} width={width} height={height}>
-        {content}
+        {svgElement}
       </ZoomWrapper>
     ) : (
-      content
+      svgElement
     );
   },
 );

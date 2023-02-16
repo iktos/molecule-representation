@@ -2,9 +2,10 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { applyMatrixToPoint, Zoom } from '@visx/zoom';
 import { TransformMatrix } from '@visx/zoom/lib/types';
-import ZoomReset from '../icons/ZoomReset';
-import ZoomIn from '../icons/ZoomIn';
-import ZoomOut from '../icons/ZoomOut';
+
+import ZoomReset from '../../icons/ZoomReset';
+import ZoomIn from '../../icons/ZoomIn';
+import ZoomOut from '../../icons/ZoomOut';
 
 export enum DisplayZoomToolbar {
   ON_HOVER = 'ON_HOVER',
