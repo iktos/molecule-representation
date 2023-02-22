@@ -1,12 +1,18 @@
-import { get_molecule, release_molecule } from '@iktos-oss/rdkit-provider';
-import { JSMol, RDKitModule } from '@rdkit/rdkit';
+import { getSvgFromSmarts } from '@iktos-oss/rdkit-provider';
+import {
+  getSvg,
+  getMoleculeDetails,
+  getCanonicalFormForStructure,
+  getMatchingSubstructure,
+} from '@iktos-oss/rdkit-provider';
 import { AlignmentDetails } from '../components';
 import { HIGHLIGHT_RDKIT_COLORS, RDKitColor, TRANSPARANT_RDKIT_COLOR } from '../constants';
-import { get_canonical_form_for_structure, get_molecule_details } from './molecule';
 
-export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
+export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
   if (!params.smiles) return null;
-  const canonicalSmiles = get_canonical_form_for_structure(params.smiles, RDKit);
+  const { canonicalForm: canonicalSmiles } = await getCanonicalFormForStructure(worker, {
+    structure: params.smiles,
+  });
   if (!canonicalSmiles) return null;
 
   const {
@@ -21,7 +27,7 @@ export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
   } = params;
   const highlightBondColors = getHighlightColors(bondsToHighlight);
   const highlightAtomColors = getHighlightColors(atomsToHighlight);
-  const moleculeDetails = isClickable ? get_molecule_details(canonicalSmiles, RDKit) : null;
+  const moleculeDetails = isClickable ? await getMoleculeDetails(worker, { smiles: canonicalSmiles }) : null;
   if (isClickable && moleculeDetails) {
     setHighlightColorForClickableMolecule({
       nbAtoms: moleculeDetails.numAtoms,
@@ -34,19 +40,16 @@ export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
     isClickable && moleculeDetails ? [...Array(moleculeDetails.numAtoms).keys()] : atomsToHighlight?.flat() ?? [];
   const bondsToDrawWithHighlight = bondsToHighlight?.flat() ?? [];
 
-  let mol = null;
   try {
-    mol = get_molecule(canonicalSmiles, RDKit);
-    if (!mol) return null;
     if (alignmentDetails) {
-      addAlignmentFromMolBlock({
-        mol,
+      await addAlignmentFromMolBlock({
+        smiles: canonicalSmiles,
         alignmentDetails,
         highlightAtomColors,
         atomsToDrawWithHighlight,
         highlightBondColors,
         bondsToDrawWithHighlight,
-        RDKit,
+        worker,
       });
     }
     const rdkitDrawingOptions = JSON.stringify({
@@ -59,32 +62,31 @@ export const get_svg = (params: DrawSmilesSVGProps, RDKit: RDKitModule) => {
       highlightAtomColors,
       highlightBondColors,
     });
-    const svg = mol.get_svg_with_highlights(rdkitDrawingOptions);
+    const { svg } = await getSvg(worker, {
+      smiles: canonicalSmiles,
+      drawingDetails: rdkitDrawingOptions,
+      alignmentDetails,
+    });
     return svg;
   } catch (error) {
     console.error(error);
     return null;
-  } finally {
-    if (mol) {
-      if (alignmentDetails) {
-        // reset coords as mol could be in cache
-        mol.set_new_coords();
-      }
-      release_molecule(mol);
-    }
   }
 };
 
-export const get_svg_from_smarts = (params: DrawSmartsSVGProps, RDKit: RDKitModule): string | null => {
-  if (!RDKit) return null;
+export const get_svg_from_smarts = async (params: DrawSmartsSVGProps, worker: Worker) => {
+  if (!worker) return null;
   if (!params.smarts) return null;
 
-  const canonicalSmarts = get_canonical_form_for_structure(params.smarts, RDKit);
+  const { canonicalForm: canonicalSmarts } = await getCanonicalFormForStructure(worker, {
+    structure: params.smarts,
+  });
   if (!canonicalSmarts) return null;
 
-  const smartsMol = RDKit.get_qmol(canonicalSmarts);
-  const svg = smartsMol.get_svg(params.width, params.height);
-  smartsMol.delete();
+  const { svg } = await getSvgFromSmarts(worker, {
+    ...params,
+    smarts: canonicalSmarts,
+  });
   return svg;
 };
 
@@ -103,50 +105,49 @@ const getHighlightColors = (items?: number[][]) => {
   return highlightColors;
 };
 
-const addAlignmentFromMolBlock = ({
-  mol,
+const addAlignmentFromMolBlock = async ({
+  smiles,
   alignmentDetails,
   highlightAtomColors,
   atomsToDrawWithHighlight,
   highlightBondColors,
   bondsToDrawWithHighlight,
-  RDKit,
+  worker,
 }: {
-  mol: JSMol;
+  smiles: string;
   alignmentDetails: AlignmentDetails;
   highlightAtomColors: HighlightColors;
   highlightBondColors: HighlightColors;
   atomsToDrawWithHighlight: number[];
   bondsToDrawWithHighlight: number[];
-  RDKit: RDKitModule;
+  worker: Worker;
 }) => {
-  const molToAlignWith = get_molecule(alignmentDetails.molBlock, RDKit);
-  if (!molToAlignWith) return;
-  mol.generate_aligned_coords(molToAlignWith, true);
   if (!alignmentDetails.highlightColor) {
-    release_molecule(molToAlignWith);
     return;
   }
-  const { atoms: molblockAtomsToHighlight, bonds: molblockBondsToHighlight } = JSON.parse(
-    mol.get_substruct_match(molToAlignWith),
-  );
-  if (molblockAtomsToHighlight) {
+  const matchDetails = await getMatchingSubstructure(worker, {
+    structure: smiles,
+    substructure: alignmentDetails.molBlock,
+  });
+  if (!matchDetails) return;
+  const { matchingAtoms, matchingBonds } = matchDetails;
+
+  if (matchingAtoms) {
     addAtomsOrBondsToHighlight({
-      indicies: molblockAtomsToHighlight,
+      indicies: matchingAtoms,
       highlightColors: highlightAtomColors,
       indiciesToHighlight: atomsToDrawWithHighlight,
       color: alignmentDetails.highlightColor,
     });
   }
-  if (molblockBondsToHighlight) {
+  if (matchingBonds) {
     addAtomsOrBondsToHighlight({
-      indicies: molblockBondsToHighlight,
+      indicies: matchingBonds,
       highlightColors: highlightBondColors,
       indiciesToHighlight: bondsToDrawWithHighlight,
       color: alignmentDetails.highlightColor,
     });
   }
-  release_molecule(molToAlignWith);
 };
 
 const addAtomsOrBondsToHighlight = ({
