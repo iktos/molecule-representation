@@ -10,6 +10,7 @@ import { RDKitProvider } from '@iktos-oss/rdkit-provider';
 import { BIG_MOLECULE, MOLECULES, RANOLAZINE_SMILES, SEVEN_HIGHLIGHTS_RANOLAZINE } from './fixtures/molecules';
 import { RDKitColor } from '../constants';
 import { CCO_MOL_BLOCK, SMILES_TO_ALIGN_CCO_AGAINST } from './fixtures/molblock';
+import { RDKitProviderProps } from '@iktos-oss/rdkit-provider';
 
 export default {
   title: 'components/molecules/MoleculeRepresentation',
@@ -23,9 +24,22 @@ const PROPS: MoleculeRepresentationProps = {
   onAtomClick: undefined,
 };
 
-const Template: Story<MoleculeRepresentationProps> = (args) => (
-  <RDKitProvider cache={{ enableJsMolCaching: true, maxJsMolsCached: 30 }}>
-    <MoleculeRepresentation {...args} />
+const RDKitProviderCachingProps: RDKitProviderProps = {
+  cache: { enableJsMolCaching: true, maxJsMolsCached: 50 },
+};
+
+const Template: Story<{
+  moleculeRepresetnationProps: MoleculeRepresentationProps;
+  rdkitProviderProps: RDKitProviderProps;
+}> = ({
+  moleculeRepresetnationProps,
+  rdkitProviderProps,
+}: {
+  moleculeRepresetnationProps: MoleculeRepresentationProps;
+  rdkitProviderProps: RDKitProviderProps;
+}) => (
+  <RDKitProvider {...rdkitProviderProps}>
+    <MoleculeRepresentation {...moleculeRepresetnationProps} />
   </RDKitProvider>
 );
 
@@ -33,7 +47,7 @@ const TemplateOfListOfMoleculesRepresentations: Story<{
   listOfSmiles: string[];
   listOfProps: MoleculeRepresentationProps[];
 }> = ({ listOfSmiles, listOfProps }: { listOfSmiles: string[]; listOfProps: MoleculeRepresentationProps[] }) => (
-  <RDKitProvider cache={{ enableJsMolCaching: true, maxJsMolsCached: 30 }}>
+  <RDKitProvider {...RDKitProviderCachingProps}>
     <div style={{ display: 'flex', flexWrap: 'wrap' }}>
       {listOfSmiles.map((smiles, idx) => (
         // eslint-disable-next-line react/jsx-key
@@ -72,44 +86,62 @@ const TemplateWithOnAtomClick: Story<MoleculeRepresentationProps> = (args) => {
     }
   };
   return (
-    <RDKitProvider cache={{ enableJsMolCaching: true, maxJsMolsCached: 30 }}>
+    <RDKitProvider {...RDKitProviderCachingProps}>
       <MoleculeRepresentation {...args} onAtomClick={onAtomClick} />
     </RDKitProvider>
   );
 };
 
 export const Default = Template.bind({});
-Default.args = PROPS;
+Default.args = { moleculeRepresetnationProps: PROPS, rdkitProviderProps: RDKitProviderCachingProps };
+
+export const CoordgenPreferred = Template.bind({});
+CoordgenPreferred.args = {
+  moleculeRepresetnationProps: PROPS,
+  rdkitProviderProps: { ...RDKitProviderCachingProps, preferCoordgen: true },
+};
 
 export const HighlightedAtoms = Template.bind({});
 HighlightedAtoms.args = {
-  ...PROPS,
-  atomsToHighlight: [
-    [1, 0],
-    [3, 4],
-  ],
+  moleculeRepresetnationProps: {
+    ...PROPS,
+    atomsToHighlight: [
+      [1, 0],
+      [3, 4],
+    ],
+  },
+  rdkitProviderProps: RDKitProviderCachingProps,
 };
 
 export const HighlightedBonds = Template.bind({});
 HighlightedBonds.args = {
-  ...PROPS,
-  bondsToHighlight: [
-    [1, 0],
-    [3, 4],
-  ],
+  moleculeRepresetnationProps: {
+    ...PROPS,
+    bondsToHighlight: [
+      [1, 0],
+      [3, 4],
+    ],
+  },
+  rdkitProviderProps: RDKitProviderCachingProps,
 };
 
 export const WithIndices = Template.bind({});
 WithIndices.args = {
-  ...PROPS,
-  addAtomIndices: true,
+  moleculeRepresetnationProps: {
+    ...PROPS,
+    addAtomIndices: true,
+  },
+  rdkitProviderProps: RDKitProviderCachingProps,
 };
 
 export const FromSmarts = Template.bind({});
 FromSmarts.args = {
-  ...PROPS,
-  smarts: undefined,
-  smiles: '****CO',
+  moleculeRepresetnationProps: {
+    ...PROPS,
+    smarts: undefined,
+    smiles: '****CO',
+  },
+  rdkitProviderProps: RDKitProviderCachingProps,
 };
 
 const alignmentHighlightColor: RDKitColor = [0.2, 0.8, 0.7, 0.7];
