@@ -50,6 +50,8 @@ const props: MoleculeRepresentationProps = {
 Run the storybook locally to see all available options.
 
 ```bash
+    git clone https://github.com/iktos/molecule-representation.git
+    cd molecule-representation
     npm install
     npm run storybook
 ```  
