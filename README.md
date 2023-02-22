@@ -1,10 +1,12 @@
 # molecule-representation
 
-Interactif molecule represnetations as react components
+React components for interactive 2D molecule representation rendering.
 
-# usage
+## Usage
 
-#### wrap your components in an RDKit provider from [@iktos-oss/rdkit-provider](https://github.com/iktos/rdkit-provider)
+#### Initial setup  
+
+Wrap your components in an RDKit provider from [@iktos-oss/rdkit-provider](https://github.com/iktos/rdkit-provider)
 
 ```html
 import { RDKitProvider } from '@iktos-oss/rdkit-provider';
@@ -21,8 +23,7 @@ import { RDKitProvider } from '@iktos-oss/rdkit-provider';
 </RDKitProvider>`
 ```
 
-
-#### render molecule
+#### Rendering molecules
 
 ```js
 import { MoleculeRepresentation, MoleculeRepresentationProps } from '@iktos-oss/molecule-representation';
@@ -44,9 +45,11 @@ const props: MoleculeRepresentationProps = {
 <MoleculeRepresentation {...props} onAtomClick={} />
 ```
 
-launch storybook to see all available options
+## Demo  
+
+Run the storybook locally to see all available options.
 
 ```bash
     npm install
     npm run storybook
-```
+```  
