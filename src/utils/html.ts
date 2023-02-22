@@ -38,6 +38,7 @@ export const appendRectsToSvg = (svg: string, rects: Rect[]) => {
   const temp = document.createElement('div');
   temp.innerHTML = svg;
   const svgParsed = temp.getElementsByTagName('svg')[0];
+  if (!svgParsed) return;
   for (const rect of rects) {
     // @ts-ignore
     const rectElem = document.createElementNS(svgParsed.attributes['xmlns'].nodeValue, 'rect');
