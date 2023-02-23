@@ -6,10 +6,9 @@ export interface Rect {
   y: number;
 }
 
-export const isElementInParentBySelector = (selector: string, parent: HTMLDivElement) =>
-  !!parent.querySelector(selector);
+export const isElementInParentBySelector = (selector: string, parent: SVGElement) => !!parent.querySelector(selector);
 
-export const waitForChildFromParent = (selector: string, parent: HTMLDivElement) => {
+export const waitForChildFromParent = (selector: string, parent: SVGElement) => {
   return new Promise((resolve) => {
     if (parent.querySelector(selector)) {
       return resolve(parent.querySelectorAll(selector));

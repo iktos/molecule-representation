@@ -1,4 +1,5 @@
-import React, { CSSProperties, memo, useEffect, useMemo, useRef, useState } from 'react';
+import React, { CSSProperties, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
 import { useRDKit } from '@iktos-oss/rdkit-provider';
 import { ClickableAtoms, DrawSmilesSVGProps, get_svg, get_svg_from_smarts } from '../../utils/draw';
 import { appendRectsToSvg, Rect } from '../../utils/html';
@@ -9,8 +10,10 @@ import {
   computeClickingAreaForAtoms,
   getAtomIdxFromClickableId,
 } from './MoleculeRepresentation.service';
+import ZoomWrapper, { DisplayZoomToolbar, DisplayZoomToolbarStrings } from '../Zoom/ZoomWrapper';
 import { Spinner } from '../Spinner';
 import { RDKitColor } from '../../constants';
+import { createSvgElement } from '../../utils/create-svg-element';
 
 export type MoleculeRepresentationProps = SmilesRepresentationProps | SmartsRepresentationProps;
 
@@ -29,10 +32,12 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     alignmentDetails,
     style,
     width,
+    zoomable = false,
+    displayZoomToolbar = DisplayZoomToolbar.ON_HOVER,
     ...restOfProps
   }: MoleculeRepresentationProps) => {
     const { RDKit } = useRDKit();
-    const moleculeRef = useRef<HTMLDivElement>(null);
+    const moleculeRef = useRef<SVGElement>(null);
     const [svgContent, setSvgContent] = useState('');
     const [rects, setRects] = useState<Array<Rect>>([]);
     const isClickable = useMemo(() => !!onAtomClick, [onAtomClick]);
@@ -93,27 +98,40 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       alignmentDetails,
     ]);
 
+    const handleOnClick = useCallback(
+      (e: React.MouseEvent) => {
+        const clickedId = (e.target as SVGRectElement).id;
+        if (onAtomClick && clickedId) {
+          e.preventDefault();
+          e.stopPropagation();
+          const atomIdx = getAtomIdxFromClickableId(clickedId);
+          onAtomClick(atomIdx);
+        }
+      },
+      [onAtomClick],
+    );
+
     if (!svgContent) return <Spinner width={width} height={height} />;
 
-    return (
-      <div
-        data-testid='clickable-molecule'
-        ref={moleculeRef}
-        {...restOfProps}
-        className={`molecule ${onAtomClick ? CLICKABLE_MOLECULE_CLASSNAME : ''}`}
-        dangerouslySetInnerHTML={{ __html: svgContent }}
-        id={id}
-        onClick={(e) => {
-          const clickedId = (e.target as HTMLDivElement).id;
-          if (onAtomClick && clickedId) {
-            e.preventDefault();
-            e.stopPropagation();
-            const atomIdx = getAtomIdxFromClickableId(clickedId);
-            onAtomClick(atomIdx);
-          }
-        }}
-        style={{ ...style, height, width }}
-      ></div>
+    const svgElement = createSvgElement(svgContent, {
+      'data-testid': 'clickable-molecule',
+      ref: moleculeRef,
+      ...restOfProps,
+      className: `molecule ${onAtomClick ? CLICKABLE_MOLECULE_CLASSNAME : ''}`,
+      height,
+      id,
+      onClick: handleOnClick,
+      style,
+      title: smiles,
+      width,
+    });
+
+    return zoomable ? (
+      <ZoomWrapper displayZoomToolbar={displayZoomToolbar} width={width} height={height}>
+        {svgElement}
+      </ZoomWrapper>
+    ) : (
+      svgElement
     );
   },
 );
@@ -132,6 +150,9 @@ interface MoleculeRepresentationBaseProps {
   onAtomClick?: (atomId: string) => void;
   style?: CSSProperties;
   width: number;
+  /** Zoomable molecule with meta key + mouse wheel or toolbar */
+  zoomable?: boolean;
+  displayZoomToolbar?: DisplayZoomToolbarStrings;
 }
 
 interface SmilesRepresentationProps extends MoleculeRepresentationBaseProps {
