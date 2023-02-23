@@ -22,6 +22,7 @@ const PROPS: MoleculeRepresentationProps = {
   height: 200,
   width: 300,
   onAtomClick: undefined,
+  zoomable: false,
 };
 
 const RDKitProviderCachingProps: RDKitProviderProps = {
@@ -146,8 +147,11 @@ FromSmarts.args = {
 
 export const Zoomable = Template.bind({});
 Zoomable.args = {
-  ...PROPS,
-  zoomable: true,
+  moleculeRepresetnationProps: {
+    ...PROPS,
+    zoomable: true,
+  },
+  rdkitProviderProps: RDKitProviderCachingProps,
 };
 
 const alignmentHighlightColor: RDKitColor = [0.2, 0.8, 0.7, 0.7];
