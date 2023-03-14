@@ -138,8 +138,9 @@ export const FromSmarts = Template.bind({});
 FromSmarts.args = {
   moleculeRepresetnationProps: {
     ...PROPS,
-    smarts: undefined,
-    smiles: '****CO',
+    smarts: '[#6][CH1](=O)',
+    smiles: undefined,
+    alignmentDetails: undefined,
   },
   rdkitProviderProps: RDKitProviderCachingProps,
 };
@@ -180,6 +181,8 @@ Clickable.args = {
 export const BigClickableMolecule = TemplateWithOnAtomClick.bind({});
 BigClickableMolecule.args = {
   ...PROPS,
+  width: 800,
+  height: 800,
   smiles: BIG_MOLECULE,
 };
 
