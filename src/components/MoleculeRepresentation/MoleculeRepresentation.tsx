@@ -1,4 +1,4 @@
-import React, { CSSProperties, memo, useEffect, useMemo, useRef, useState } from 'react';
+import React, { CSSProperties, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getMoleculeDetails, useRDKit } from '@iktos-oss/rdkit-provider';
 import { ClickableAtoms, DrawSmilesSVGProps, get_svg, get_svg_from_smarts } from '../../utils/draw';
 import { appendRectsToSvg, Rect } from '../../utils/html';
@@ -35,32 +35,39 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     const [svgContent, setSvgContent] = useState('');
     const [rects, setRects] = useState<Array<Rect>>([]);
     const isClickable = useMemo(() => !!onAtomClick, [onAtomClick]);
-    const shouldComputeRects = useRef(false);
+    const [shouldComputeRects, setShouldComputeRects] = useState(false);
 
-    useEffect(() => {
-      const computeClickingRects = async () => {
-        if (!shouldComputeRects.current) return;
-        if (!worker) return;
-        if (!isClickable) return;
-        const structureToDraw = smiles || (smarts as string);
-        const moleculeDetails = await getMoleculeDetails(worker, { smiles: structureToDraw });
-        if (!moleculeDetails) return;
-        setTimeout(
-          // do this a better way, the issue is when highlighting there is a moment when the atom-0 is rendered at the wrong position (0-0)
-          () => {
-            computeClickingAreaForAtoms({
-              numAtoms: moleculeDetails.numAtoms,
-              parentDiv: moleculeRef.current,
-              clickableAtoms: clickableAtoms?.clickableAtomsIds,
-            }).then(setRects);
-          },
-          100,
-        );
-        shouldComputeRects.current = false;
-      };
-      computeClickingRects();
+    const computeClickingRects = useCallback(async () => {
+      if (!shouldComputeRects) return;
+      console.log('0');
+      if (!worker) return;
+      console.log('1');
+      if (!isClickable) return;
+      console.log('2');
+      const structureToDraw = smiles || (smarts as string);
+      console.log('3');
+      const moleculeDetails = await getMoleculeDetails(worker, { smiles: structureToDraw });
+      console.log('4');
+      if (!moleculeDetails) return;
+      console.log('5');
+      setTimeout(
+        // do this a better way, the issue is when highlighting there is a moment when the atom-0 is rendered at the wrong position (0-0)
+        () => {
+          console.log('6');
+          computeClickingAreaForAtoms({
+            numAtoms: moleculeDetails.numAtoms,
+            parentDiv: moleculeRef.current,
+            clickableAtoms: clickableAtoms?.clickableAtomsIds,
+          }).then(setRects);
+        },
+        250,
+      );
+      setShouldComputeRects(false);
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [smiles, smarts, isClickable, clickableAtoms, shouldComputeRects.current]);
+    }, [smiles, smarts, isClickable, clickableAtoms, shouldComputeRects]);
+    useEffect(() => {
+      computeClickingRects();
+    }, [computeClickingRects]);
 
     useEffect(() => {
       if (!worker) return;
@@ -85,7 +92,8 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
           setSvgContent(svhWithHitBoxes);
         }
         if (!rects.length) {
-          shouldComputeRects.current = true;
+          console.log('setting shouldComputeRects');
+          setShouldComputeRects(true);
         }
       };
       computeSvg();
