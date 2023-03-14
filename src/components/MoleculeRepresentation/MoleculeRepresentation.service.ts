@@ -26,6 +26,7 @@ export const computeClickingAreaForAtoms = async ({
     : new Set(processedHiddenAtomsIds);
   const rectsForVisibleAtoms = await computeClickingAreaForVisibleAtoms(numAtoms, parentDiv, atomsToIgnore);
 
+  console.log('returning ', [...rectsForVisibleAtoms, ...rectsForHiddenAtoms]);
   return [...rectsForVisibleAtoms, ...rectsForHiddenAtoms];
 };
 
