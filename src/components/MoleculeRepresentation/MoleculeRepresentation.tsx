@@ -55,8 +55,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
         100,
       );
       setShouldComputeRects(false);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [smiles, smarts, isClickable, clickableAtoms]);
+    }, [smiles, smarts, isClickable, clickableAtoms, worker]);
 
     useEffect(() => {
       if (!shouldComputeRects) return;
@@ -81,11 +80,11 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
           ? await get_svg_from_smarts({ smarts, width, height }, worker)
           : await get_svg(drawingDetails, worker);
         if (!svg) return;
-        const svhWithHitBoxes = appendRectsToSvg(svg, rects);
-        if (svhWithHitBoxes) {
-          setSvgContent(svhWithHitBoxes);
+        const svgWithHitBoxes = rects.length ? appendRectsToSvg(svg, rects) : svg;
+        if (svgWithHitBoxes) {
+          setSvgContent(svgWithHitBoxes);
         }
-        if (!rects.length) {
+        if (!rects.length && isClickable) {
           setShouldComputeRects(true);
         }
       };
