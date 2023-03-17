@@ -3,5 +3,5 @@ lib
 node_modules
 tsconfig.tsbuildinfo
 public/RDKit_minimal.*
-public/rdk-worker.js
+public/rdkit-worker.js
 storybook-static
