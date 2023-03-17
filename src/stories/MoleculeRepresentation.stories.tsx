@@ -177,10 +177,11 @@ Clickable.args = {
   ...PROPS,
 };
 
-export const BigClickableMolecule = TemplateWithOnAtomClick.bind({});
-BigClickableMolecule.args = {
+export const BigClickableMoleculeWithLoadingSpinner = TemplateWithOnAtomClick.bind({});
+BigClickableMoleculeWithLoadingSpinner.args = {
   ...PROPS,
   smiles: BIG_MOLECULE,
+  showLoadingSpinner: true,
 };
 
 export const ClickableSetOfAtoms = TemplateWithOnAtomClick.bind({});
@@ -198,7 +199,7 @@ ThousandMolecules.args = {
   listOfSmiles: MOLECULES,
   listOfProps: Array(MOLECULES.length)
     .fill(null)
-    .map(() => PROPS),
+    .map(() => ({ ...PROPS, showLoadingSpinner: true })),
 };
 
 export const SevenHundredHighlightsForRanolazine = TemplateOfListOfMoleculesRepresentations.bind({});
