@@ -11,6 +11,7 @@ import {
 } from './MoleculeRepresentation.service';
 import { Spinner } from '../Spinner';
 import { RDKitColor } from '../../constants';
+import { isEqual } from '../../utils/compare';
 
 export type MoleculeRepresentationProps = SmilesRepresentationProps | SmartsRepresentationProps;
 
@@ -117,6 +118,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       ></div>
     );
   },
+  (prevProps, currentPros) => isEqual(prevProps, currentPros),
 );
 
 MoleculeRepresentation.displayName = 'MoleculeRepresentation';
