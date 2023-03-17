@@ -28,6 +28,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     smiles,
     alignmentDetails,
     style,
+    showLoadingSpinner = false,
     width,
     ...restOfProps
   }: MoleculeRepresentationProps) => {
@@ -93,7 +94,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       alignmentDetails,
     ]);
 
-    if (!svgContent) return <Spinner width={width} height={height} />;
+    if (showLoadingSpinner && !svgContent) return <Spinner width={width} height={height} />;
 
     return (
       <div
@@ -131,6 +132,7 @@ interface MoleculeRepresentationBaseProps {
   id?: string;
   onAtomClick?: (atomId: string) => void;
   style?: CSSProperties;
+  showLoadingSpinner?: boolean;
   width: number;
 }
 
