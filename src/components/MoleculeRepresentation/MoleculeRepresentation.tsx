@@ -1,5 +1,5 @@
 import React, { CSSProperties, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { getMoleculeDetails, useRDKit } from '@iktos-oss/rdkit-provider';
+import { getMoleculeDetails, isValidSmiles, useRDKit } from '@iktos-oss/rdkit-provider';
 import { ClickableAtoms, DrawSmilesSVGProps, get_svg, get_svg_from_smarts } from '../../utils/draw';
 import { appendRectsToSvg, Rect } from '../../utils/html';
 
@@ -29,6 +29,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     alignmentDetails,
     style,
     showLoadingSpinner = false,
+    showSmartsAsSmiles = false,
     width,
     ...restOfProps
   }: MoleculeRepresentationProps) => {
@@ -78,9 +79,12 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
           isClickable,
           clickableAtoms,
         };
-        const svg = smarts
-          ? await get_svg_from_smarts({ smarts, width, height }, worker)
-          : await get_svg(drawingDetails, worker);
+        const isSmartsAValidSmiles =
+          showSmartsAsSmiles && !!smarts && (await isValidSmiles(worker, { smiles: smarts })).isValid;
+        const svg =
+          smarts && !isSmartsAValidSmiles
+            ? await get_svg_from_smarts({ smarts, width, height }, worker)
+            : await get_svg(drawingDetails, worker);
         if (!svg) return;
         const svgWithHitBoxes = rects.length ? appendRectsToSvg(svg, rects) : svg;
         if (svgWithHitBoxes) {
@@ -92,6 +96,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       };
       computeSvg();
     }, [
+      showSmartsAsSmiles,
       smiles,
       smarts,
       rects,
@@ -147,6 +152,7 @@ interface MoleculeRepresentationBaseProps {
   onAtomClick?: (atomId: string) => void;
   style?: CSSProperties;
   showLoadingSpinner?: boolean;
+  showSmartsAsSmiles?: boolean;
   width: number;
 }
 

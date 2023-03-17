@@ -145,6 +145,18 @@ FromSmarts.args = {
   rdkitProviderProps: RDKitProviderCachingProps,
 };
 
+export const DrawSmartsAsSmiles = Template.bind({});
+DrawSmartsAsSmiles.args = {
+  moleculeRepresetnationProps: {
+    ...PROPS,
+    smarts: '[#6][CH1](=O)',
+    showSmartsAsSmiles: true,
+    smiles: undefined,
+    alignmentDetails: undefined,
+  },
+  rdkitProviderProps: RDKitProviderCachingProps,
+};
+
 const alignmentHighlightColor: RDKitColor = [0.2, 0.8, 0.7, 0.7];
 export const WithSubstructureAlignmentTemplate = TemplateOfListOfMoleculesRepresentations.bind({});
 WithSubstructureAlignmentTemplate.args = {
