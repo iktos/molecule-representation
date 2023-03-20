@@ -1,5 +1,4 @@
 import React, { CSSProperties, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import SVG from 'react-inlinesvg';
 import { getMoleculeDetails, isValidSmiles, useRDKit } from '@iktos-oss/rdkit-provider';
 import { ClickableAtoms, DrawSmilesSVGProps, get_svg, get_svg_from_smarts } from '../../utils/draw';
 import { appendRectsToSvg, Rect } from '../../utils/html';
@@ -130,7 +129,10 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       [onAtomClick],
     );
 
-    if (showLoadingSpinner && !svgContent) return <Spinner width={width} height={height} />;
+    if (!svgContent) {
+      if (showLoadingSpinner) return <Spinner width={width} height={height} />;
+      else return null;
+    }
 
     const svgElement = createSvgElement(svgContent, {
       'data-testid': 'clickable-molecule',
