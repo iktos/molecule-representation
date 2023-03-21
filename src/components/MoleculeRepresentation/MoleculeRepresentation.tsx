@@ -131,7 +131,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
 
     if (!svgContent) {
       if (showLoadingSpinner) return <Spinner width={width} height={height} />;
-      else return null;
+      return null;
     }
 
     const svgElement = createSvgElement(svgContent, {
