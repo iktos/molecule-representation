@@ -22,7 +22,7 @@ interface ZoomWrapperProps {
   displayZoomToolbar: DisplayZoomToolbarStrings;
 }
 
-const ZoomWrapper: React.FC<ZoomWrapperProps> = ({ children, displayZoomToolbar, height, width }) => {
+export const ZoomWrapper: React.FC<ZoomWrapperProps> = ({ children, displayZoomToolbar, height, width }) => {
   const [hover, setHover] = useState(false);
   const displayToolbar = useMemo(() => {
     switch (displayZoomToolbar) {
@@ -123,5 +123,3 @@ const ZoomWrapper: React.FC<ZoomWrapperProps> = ({ children, displayZoomToolbar,
     </Zoom>
   );
 };
-
-export default ZoomWrapper;
