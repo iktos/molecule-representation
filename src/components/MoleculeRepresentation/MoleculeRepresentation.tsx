@@ -8,7 +8,7 @@ import {
   computeClickingAreaForAtoms,
   getAtomIdxFromClickableId,
 } from './MoleculeRepresentation.service';
-import ZoomWrapper, { DisplayZoomToolbar, DisplayZoomToolbarStrings } from '../Zoom/ZoomWrapper';
+import { ZoomWrapper, DisplayZoomToolbar, DisplayZoomToolbarStrings } from '../Zoom';
 import { Spinner } from '../Spinner';
 import { RDKitColor } from '../../constants';
 import { isEqual } from '../../utils/compare';
