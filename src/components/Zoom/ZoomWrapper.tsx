@@ -112,9 +112,29 @@ export const ZoomWrapper: React.FC<ZoomWrapperProps> = ({ children, displayZoomT
                   zIndex: '100',
                 }}
               >
-                {isZooming && <ZoomReset cursor='pointer' onClick={zoom.reset} />}
-                <ZoomIn cursor='pointer' onClick={() => zoom.scale({ scaleX: 1.2, scaleY: 1.2 })} />
-                <ZoomOut cursor='pointer' onClick={() => zoom.scale({ scaleX: 0.8, scaleY: 0.8 })} />
+                {isZooming && (
+                  <ZoomReset
+                    cursor='pointer'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      zoom.reset();
+                    }}
+                  />
+                )}
+                <ZoomIn
+                  cursor='pointer'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    zoom.scale({ scaleX: 1.2, scaleY: 1.2 });
+                  }}
+                />
+                <ZoomOut
+                  cursor='pointer'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    zoom.scale({ scaleX: 0.8, scaleY: 0.8 });
+                  }}
+                />
               </div>
             )}
           </div>
