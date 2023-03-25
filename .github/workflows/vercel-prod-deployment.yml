@@ -5,7 +5,7 @@ env:
 on:
   push:
     branches:
-      - main
+      - master
 jobs:
   deploy-production:
     runs-on: ubuntu-latest
