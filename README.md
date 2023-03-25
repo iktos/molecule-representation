@@ -1,6 +1,11 @@
 # molecule-representation
 
 React components for interactive 2D molecule representation rendering.
+
+## Demo  
+Visit https://molecule-representation.vercel.app for a demo of the package, you can browse the diffrent options like molecule representations with zoom, click handler, substructure alignement...
+
+ Deployments are automated via [Vercel](https://vercel.com).
 ## Usage
 
 #### Initial setup  
@@ -45,7 +50,7 @@ const props: MoleculeRepresentationProps = {
 <MoleculeRepresentation {...props} onAtomClick={} />
 ```
 
-## Demo
+## Local dev
 ```bash
     git clone https://github.com/iktos/molecule-representation.git
     cd molecule-representation
