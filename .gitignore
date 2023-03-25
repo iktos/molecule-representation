@@ -2,6 +2,6 @@
 lib
 node_modules
 tsconfig.tsbuildinfo
-public/RDKit_minimal.*
-public/rdkit-worker.js
+public
 storybook-static
+.vercel
