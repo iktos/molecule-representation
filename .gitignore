@@ -4,4 +4,3 @@ node_modules
 tsconfig.tsbuildinfo
 public
 storybook-static
-.vercel
