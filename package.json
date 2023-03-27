@@ -23,6 +23,7 @@
     "type": "git",
     "url": "git+https://github.com/iktos/molecule-representation.git"
   },
+  "license": "MIT",
   "scripts": {
     "build": "rm -rf lib/ && npm run build:esm && npm run build:cjs",
     "build:esm": "tsc",
