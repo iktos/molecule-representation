@@ -3,7 +3,7 @@
 React components for interactive 2D molecule representation rendering.
 
 ## Demo  
-Visit https://molecule-representation.vercel.app for a demo of the package, you can browse the diffrent options like molecule representations with zoom, click handler, substructure alignement...
+Visit https://molecule-representation-ramziweslati.vercel.app for a demo of the package, you can browse the diffrent options like molecule representations with zoom, click handler, substructure alignement...
 
  Deployments are automated via [Vercel](https://vercel.com).
 ## Usage
