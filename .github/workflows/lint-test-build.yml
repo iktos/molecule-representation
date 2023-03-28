@@ -3,7 +3,7 @@ name: lint - test
 on: [pull_request]
 
 jobs:
-  build:
+  lint-tsc:
     runs-on: ubuntu-latest
 
     strategy:
