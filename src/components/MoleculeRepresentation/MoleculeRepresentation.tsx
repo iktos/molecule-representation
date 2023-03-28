@@ -66,7 +66,10 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     const [svgContent, setSvgContent] = useState('');
     const [rects, setRects] = useState<Array<Rect>>([]);
     const isClickable = useMemo(() => !!onAtomClick, [onAtomClick]);
-    const [shouldComputeRects, setShouldComputeRects] = useState(false);
+    const [shouldComputeRectsDetails, setShouldComputeRectsDetails] = useState<{
+      shouldComputeRects: boolean;
+      computedRectsForAtoms: number[];
+    }>({ shouldComputeRects: false, computedRectsForAtoms: [] });
 
     const computeClickingRects = useCallback(async () => {
       if (!worker) return;
@@ -85,13 +88,16 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
         },
         100,
       );
-      setShouldComputeRects(false);
+      setShouldComputeRectsDetails({
+        shouldComputeRects: false,
+        computedRectsForAtoms: clickableAtoms?.clickableAtomsIds ?? [...Array(moleculeDetails.numAtoms).keys()],
+      });
     }, [smiles, smarts, isClickable, clickableAtoms, worker]);
 
     useEffect(() => {
-      if (!shouldComputeRects) return;
+      if (!shouldComputeRectsDetails.shouldComputeRects) return;
       computeClickingRects();
-    }, [shouldComputeRects, computeClickingRects]);
+    }, [shouldComputeRectsDetails, computeClickingRects]);
 
     useEffect(() => {
       if (!worker) return;
@@ -118,9 +124,15 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
         if (svgWithHitBoxes) {
           setSvgContent(svgWithHitBoxes);
         }
-        if (!rects.length && isClickable) {
-          setShouldComputeRects(true);
-        }
+        setShouldComputeRectsDetails((prev) => {
+          const shouldInitClickableRects = isClickable && !prev.computedRectsForAtoms.length;
+          const areClickableRectsOutOfDate =
+            isClickable && clickableAtoms && !isEqual(prev.computedRectsForAtoms, clickableAtoms?.clickableAtomsIds);
+          if (shouldInitClickableRects || areClickableRectsOutOfDate) {
+            return { ...prev, shouldComputeRects: true };
+          }
+          return prev;
+        });
       };
       computeSvg();
     }, [
