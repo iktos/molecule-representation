@@ -22,7 +22,8 @@
   SOFTWARE.
 */
 
-export type RDKitColor = number[];
+import { RDKitColor } from '@iktos-oss/rdkit-provider';
+
 export const TRANSPARANT_RDKIT_COLOR: RDKitColor = [1, 1, 1, 0];
 export const HIGHLIGHT_RDKIT_COLORS: RDKitColor[] = [
   [255 / 255, 170 / 255, 189 / 255],

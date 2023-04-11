@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 
-import { getSvgFromSmarts } from '@iktos-oss/rdkit-provider';
+import { RDKitColor, getSvgFromSmarts } from '@iktos-oss/rdkit-provider';
 import {
   getSvg,
   getMoleculeDetails,
@@ -30,7 +30,7 @@ import {
   getMatchingSubstructure,
 } from '@iktos-oss/rdkit-provider';
 import { AlignmentDetails } from '../components';
-import { HIGHLIGHT_RDKIT_COLORS, RDKitColor, TRANSPARANT_RDKIT_COLOR } from '../constants';
+import { HIGHLIGHT_RDKIT_COLORS, TRANSPARANT_RDKIT_COLOR } from '../constants';
 
 export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
   if (!params.smiles) return null;
@@ -76,7 +76,7 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
         worker,
       });
     }
-    const rdkitDrawingOptions = JSON.stringify({
+    const rdkitDrawingOptions = {
       ...DEFAULT_DRAWING_DETAILS,
       ...details,
       width,
@@ -85,7 +85,7 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
       bonds: bondsToDrawWithHighlight,
       highlightAtomColors,
       highlightBondColors,
-    });
+    };
     const { svg } = await getSvg(worker, {
       smiles: canonicalSmiles,
       drawingDetails: rdkitDrawingOptions,
@@ -218,7 +218,7 @@ const setHighlightColorForClickableMolecule = ({
 
 const DEFAULT_DRAWING_DETAILS = {
   bondLineWidth: 1,
-  backgroundColour: [1, 1, 1, 0],
+  backgroundColour: [1, 1, 1, 0] as RDKitColor,
   highlightColour: HIGHLIGHT_RDKIT_COLORS[0],
   highlightRadius: 0.3,
   fixedBondLength: 50,
