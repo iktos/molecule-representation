@@ -30,9 +30,8 @@ import {
   MoleculeRepresentation,
   MoleculeRepresentationProps,
 } from '../components/MoleculeRepresentation/MoleculeRepresentation';
-import { RDKitProvider } from '@iktos-oss/rdkit-provider';
+import { RDKitColor, RDKitProvider } from '@iktos-oss/rdkit-provider';
 import { BIG_MOLECULE, MOLECULES, RANOLAZINE_SMILES, SEVEN_HIGHLIGHTS_RANOLAZINE } from './fixtures/molecules';
-import { RDKitColor } from '../constants';
 import { CCO_MOL_BLOCK, SMILES_TO_ALIGN_CCO_AGAINST } from './fixtures/molblock';
 import { RDKitProviderProps } from '@iktos-oss/rdkit-provider';
 

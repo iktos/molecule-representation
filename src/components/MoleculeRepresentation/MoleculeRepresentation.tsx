@@ -23,7 +23,7 @@
 */
 
 import React, { CSSProperties, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { getMoleculeDetails, isValidSmiles, useRDKit } from '@iktos-oss/rdkit-provider';
+import { RDKitColor, getMoleculeDetails, isValidSmiles, useRDKit } from '@iktos-oss/rdkit-provider';
 import { ClickableAtoms, DrawSmilesSVGProps, get_svg, get_svg_from_smarts } from '../../utils/draw';
 import { appendRectsToSvg, Rect } from '../../utils/html';
 
@@ -34,7 +34,6 @@ import {
 } from './MoleculeRepresentation.service';
 import { ZoomWrapper, DisplayZoomToolbar, DisplayZoomToolbarStrings } from '../Zoom';
 import { Spinner } from '../Spinner';
-import { RDKitColor } from '../../constants';
 import { isEqual } from '../../utils/compare';
 import { createSvgElement } from '../../utils/create-svg-element';
 

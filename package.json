@@ -45,7 +45,7 @@
   "author": "Ramzi Oueslati <ramzi.oueslati@iktos.com>",
   "devDependencies": {
     "@babel/core": "^7.20.12",
-    "@iktos-oss/rdkit-provider": "^2.0.0",
+    "@iktos-oss/rdkit-provider": "^2.1.0-beta.2",
     "@rdkit/rdkit": "^2022.9.3-1.0.0",
     "@storybook/addon-actions": "^6.5.16",
     "@storybook/addon-essentials": "^6.5.16",
