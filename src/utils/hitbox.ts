@@ -1,4 +1,4 @@
-﻿/* 
+/* 
   MIT License
 
   Copyright (c) 2023 Iktos
@@ -22,14 +22,38 @@
   SOFTWARE.
 */
 
-import { getPathEdgePoints, isElementInParentBySelector, Rect, waitForChildFromParent } from '../../utils/html';
+import {
+  createHitboxPathFromPath,
+  createHitboxRectFromCoords,
+  getPathEdgePoints,
+  isElementInParentBySelector,
+  waitForChildFromParent,
+} from './html';
+import {
+  getAtomIdsFromClassnames,
+  getAtomIdxFromClickableId,
+  getBondIdFromClassnames,
+  getBondSelector,
+  getClickableAtomIdFromAtomIdx,
+  getClickableBondId,
+  getVisibleAtomSelector,
+} from './identifiers';
 
-export const CLICKABLE_MOLECULE_CLASSNAME = 'clickable-molecule';
-const CLICKABLE_ATOM_ID = 'clickable-atom-';
-const getClickableAtomIdFromAtomIdx = (atomIdx: number) => `${CLICKABLE_ATOM_ID}${atomIdx}`;
-export const getAtomIdxFromClickableId = (id: string) => id.replace(CLICKABLE_ATOM_ID, '');
+export interface Rect {
+  height: number;
+  id: string;
+  width: number;
+  x: number;
+  y: number;
+}
 
-export const computeClickingAreaForAtoms = async ({
+export interface ClickedBondIdentifiers {
+  bondId: string;
+  startAtomId: string;
+  endAtomId: string;
+}
+
+export const buildAtomsHitboxes = async ({
   numAtoms,
   parentDiv,
   clickableAtoms,
@@ -43,22 +67,44 @@ export const computeClickingAreaForAtoms = async ({
   let atomsToIgnore = clickableAtoms
     ? new Set([...Array(numAtoms).keys()].filter((atomIdx) => !clickableAtoms.includes(atomIdx)))
     : null;
-  const rectsForHiddenAtoms = await computeClickingAreaForHiddenAtoms(numAtoms, parentDiv, atomsToIgnore);
+  const rectsForHiddenAtoms = await computeClickingHiddenAtomsHitboxCoords(numAtoms, parentDiv, atomsToIgnore);
   const processedHiddenAtomsIds = rectsForHiddenAtoms.map((rect) => getAtomIdxFromClickableId(rect.id)).map(parseFloat);
   atomsToIgnore = atomsToIgnore
     ? new Set([...atomsToIgnore, ...processedHiddenAtomsIds])
     : new Set(processedHiddenAtomsIds);
-  const rectsForVisibleAtoms = await computeClickingAreaForVisibleAtoms(numAtoms, parentDiv, atomsToIgnore);
+  const rectsForVisibleAtoms = await computeClickingVisibleAtomsHitboxCoords(numAtoms, parentDiv, atomsToIgnore);
 
-  return [...rectsForVisibleAtoms, ...rectsForHiddenAtoms];
+  const hitboxesCoords = [...rectsForVisibleAtoms, ...rectsForHiddenAtoms];
+  return hitboxesCoords.map((rect) => createHitboxRectFromCoords(rect));
 };
 
-const getVisibleAtomSelector = (atomIdx: number) =>
-  `.${CLICKABLE_MOLECULE_CLASSNAME} .atom-${atomIdx}:not(ellipse):not([class*="bond"])`;
+export const buildBondsHitboxes = async (numAtoms: number, parentDiv: SVGElement | null): Promise<SVGPathElement[]> => {
+  if (!parentDiv) return [];
+  const clickablePaths: SVGPathElement[] = [];
+  for (let atomIdx = 0; atomIdx < numAtoms; atomIdx++) {
+    const matchedElems = (await waitForChildFromParent(getBondSelector(atomIdx), parentDiv)) as SVGPathElement[];
+    for (const elem of matchedElems) {
+      const atomIndicesInBond = getAtomIdsFromClassnames(elem.classList);
+      const bondIndicies = getBondIdFromClassnames(elem.classList);
+      if (bondIndicies.length !== 1 || atomIndicesInBond.length !== 2) {
+        console.error('[@iktos-oss/molecule-representation] invalid bond classname', bondIndicies, elem.classList);
+        continue;
+      }
+      const hitboxPath = createHitboxPathFromPath(
+        elem,
+        getClickableBondId({
+          bondId: bondIndicies[0],
+          startAtomId: atomIndicesInBond[0],
+          endAtomId: atomIndicesInBond[1],
+        }),
+      );
+      clickablePaths.push(hitboxPath);
+    }
+  }
+  return clickablePaths;
+};
 
-const getBondSelector = (atomIdx: number) => `.${CLICKABLE_MOLECULE_CLASSNAME} .atom-${atomIdx}[class*="bond"]`;
-
-const computeClickingAreaForVisibleAtoms = async (
+const computeClickingVisibleAtomsHitboxCoords = async (
   numAtoms: number,
   parentDiv: SVGElement,
   atomsToIgnore: Set<number> | null = null,
@@ -88,7 +134,7 @@ const computeClickingAreaForVisibleAtoms = async (
   return rects;
 };
 
-const computeClickingAreaForHiddenAtoms = async (
+const computeClickingHiddenAtomsHitboxCoords = async (
   numAtoms: number,
   parentDiv: SVGElement,
   atomsToIgnore: Set<number> | null = null,
@@ -100,10 +146,7 @@ const computeClickingAreaForHiddenAtoms = async (
     const matchedElems = (await waitForChildFromParent(getBondSelector(atomIdx), parentDiv)) as SVGPathElement[];
 
     for (const elem of matchedElems) {
-      const atomIndicesInBond = Array.from(elem.classList)
-        .filter((className: string) => className.includes('atom-'))
-        .map((className) => className.replace('atom-', ''))
-        .map(parseFloat);
+      const atomIndicesInBond = getAtomIdsFromClassnames(elem.classList);
 
       const startAtomIndex = atomIndicesInBond[0];
       const endAtomIndex = atomIndicesInBond[1];

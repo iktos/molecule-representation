@@ -24,18 +24,25 @@
 
 import React, { CSSProperties, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RDKitColor, getMoleculeDetails, isValidSmiles, useRDKit } from '@iktos-oss/rdkit-provider';
-import { ClickableAtoms, DrawSmilesSVGProps, get_svg, get_svg_from_smarts } from '../../utils/draw';
-import { appendRectsToSvg, Rect } from '../../utils/html';
-
-import {
-  CLICKABLE_MOLECULE_CLASSNAME,
-  computeClickingAreaForAtoms,
-  getAtomIdxFromClickableId,
-} from './MoleculeRepresentation.service';
 import { ZoomWrapper, DisplayZoomToolbar, DisplayZoomToolbarStrings } from '../Zoom';
 import { Spinner } from '../Spinner';
 import { isEqual } from '../../utils/compare';
 import { createSvgElement } from '../../utils/create-svg-element';
+import {
+  ClickableAtoms,
+  DrawSmilesSVGProps,
+  get_svg,
+  get_svg_from_smarts,
+  appendHitboxesToSvg,
+  buildAtomsHitboxes,
+  buildBondsHitboxes,
+  isIdClickedABond,
+  getClickedBondIdentifiersFromId,
+  isIdClickedAnAtom,
+  getAtomIdxFromClickableId,
+  CLICKABLE_MOLECULE_CLASSNAME,
+  ClickedBondIdentifiers,
+} from '../../utils';
 
 export type MoleculeRepresentationProps = SmilesRepresentationProps | SmartsRepresentationProps;
 
@@ -49,6 +56,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     height,
     id,
     onAtomClick,
+    onBondClick,
     smarts,
     smiles,
     alignmentDetails,
@@ -63,8 +71,9 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     const { worker } = useRDKit();
     const moleculeRef = useRef<SVGElement>(null);
     const [svgContent, setSvgContent] = useState('');
-    const [rects, setRects] = useState<Array<Rect>>([]);
-    const isClickable = useMemo(() => !!onAtomClick, [onAtomClick]);
+    const [atomsHitbox, setAtomsHitbox] = useState<Array<SVGRectElement>>([]);
+    const [bondsHitbox, setBondsHitbox] = useState<SVGPathElement[]>([]);
+    const isClickable = useMemo(() => !!onAtomClick || !!onBondClick, [onAtomClick, onBondClick]);
     const [shouldComputeRectsDetails, setShouldComputeRectsDetails] = useState<{
       shouldComputeRects: boolean;
       computedRectsForAtoms: number[];
@@ -79,11 +88,16 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       setTimeout(
         // do this a better way, the issue is when highlighting there is a moment when the atom-0 is rendered at the wrong position (0-0)
         () => {
-          computeClickingAreaForAtoms({
-            numAtoms: moleculeDetails.numAtoms,
-            parentDiv: moleculeRef.current,
-            clickableAtoms: clickableAtoms?.clickableAtomsIds,
-          }).then(setRects);
+          if (onAtomClick) {
+            buildAtomsHitboxes({
+              numAtoms: moleculeDetails.numAtoms,
+              parentDiv: moleculeRef.current,
+              clickableAtoms: clickableAtoms?.clickableAtomsIds,
+            }).then(setAtomsHitbox);
+          }
+          if (onBondClick) {
+            buildBondsHitboxes(moleculeDetails.numAtoms, moleculeRef.current).then(setBondsHitbox);
+          }
         },
         100,
       );
@@ -91,7 +105,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
         shouldComputeRects: false,
         computedRectsForAtoms: clickableAtoms?.clickableAtomsIds ?? [...Array(moleculeDetails.numAtoms).keys()],
       });
-    }, [smiles, smarts, isClickable, clickableAtoms, worker]);
+    }, [worker, isClickable, smiles, smarts, clickableAtoms?.clickableAtomsIds, onAtomClick, onBondClick]);
 
     useEffect(() => {
       if (!shouldComputeRectsDetails.shouldComputeRects) return;
@@ -119,7 +133,8 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
             ? await get_svg_from_smarts({ smarts, width, height }, worker)
             : await get_svg(drawingDetails, worker);
         if (!svg) return;
-        const svgWithHitBoxes = rects.length ? appendRectsToSvg(svg, rects) : svg;
+        const svgWithHitBoxes =
+          atomsHitbox.length || bondsHitbox.length ? appendHitboxesToSvg(svg, atomsHitbox, bondsHitbox) : svg;
         if (svgWithHitBoxes) {
           setSvgContent(svgWithHitBoxes);
         }
@@ -138,7 +153,8 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       showSmartsAsSmiles,
       smiles,
       smarts,
-      rects,
+      atomsHitbox,
+      bondsHitbox,
       atomsToHighlight,
       addAtomIndices,
       details,
@@ -154,14 +170,18 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     const handleOnClick = useCallback(
       (e: React.MouseEvent) => {
         const clickedId = (e.target as SVGRectElement).id;
-        if (onAtomClick && clickedId) {
+        if (isClickable) {
           e.preventDefault();
           e.stopPropagation();
-          const atomIdx = getAtomIdxFromClickableId(clickedId);
-          onAtomClick(atomIdx);
+        }
+        if (onBondClick && clickedId && isIdClickedABond(clickedId)) {
+          onBondClick(getClickedBondIdentifiersFromId(clickedId));
+        }
+        if (onAtomClick && clickedId && isIdClickedAnAtom(clickedId)) {
+          onAtomClick(getAtomIdxFromClickableId(clickedId));
         }
       },
-      [onAtomClick],
+      [onAtomClick, onBondClick, isClickable],
     );
 
     if (!svgContent) {
@@ -173,7 +193,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       'data-testid': 'clickable-molecule',
       ref: moleculeRef,
       ...restOfProps,
-      className: `molecule ${onAtomClick ? CLICKABLE_MOLECULE_CLASSNAME : ''}`,
+      className: `molecule ${isClickable ? CLICKABLE_MOLECULE_CLASSNAME : ''}`,
       height,
       id,
       onClick: handleOnClick,
@@ -205,6 +225,7 @@ interface MoleculeRepresentationBaseProps {
   height: number;
   id?: string;
   onAtomClick?: (atomId: string) => void;
+  onBondClick?: (clickedBondIdentifiers: ClickedBondIdentifiers) => void;
   style?: CSSProperties;
   showLoadingSpinner?: boolean;
   showSmartsAsSmiles?: boolean;

@@ -34,6 +34,7 @@ import { RDKitColor, RDKitProvider } from '@iktos-oss/rdkit-provider';
 import { BIG_MOLECULE, MOLECULES, RANOLAZINE_SMILES, SEVEN_HIGHLIGHTS_RANOLAZINE } from './fixtures/molecules';
 import { CCO_MOL_BLOCK, SMILES_TO_ALIGN_CCO_AGAINST } from './fixtures/molblock';
 import { RDKitProviderProps } from '@iktos-oss/rdkit-provider';
+import { ClickedBondIdentifiers } from '../utils';
 
 export default {
   title: 'components/molecules/MoleculeRepresentation',
@@ -45,6 +46,7 @@ const PROPS: MoleculeRepresentationProps = {
   height: 200,
   width: 300,
   onAtomClick: undefined,
+  onBondClick: undefined,
   zoomable: false,
 };
 
@@ -112,6 +114,94 @@ const TemplateWithOnAtomClick: Story<MoleculeRepresentationProps> = (args) => {
   return (
     <RDKitProvider {...RDKitProviderCachingProps}>
       <MoleculeRepresentation {...args} onAtomClick={onAtomClick} />
+    </RDKitProvider>
+  );
+};
+const TemplateWithOnBondClick: Story<MoleculeRepresentationProps> = (args) => {
+  const [_, updateArgs] = useArgs();
+
+  const onBondClick = (identifiers: ClickedBondIdentifiers) => {
+    const clickedBondId = parseInt(identifiers.bondId);
+    if (args.bondsToHighlight?.flat().includes(clickedBondId)) {
+      updateArgs({
+        ...args,
+        bondsToHighlight: args.bondsToHighlight.map((highlightedBondssColor) =>
+          highlightedBondssColor.filter((id) => id !== clickedBondId),
+        ),
+      });
+    } else {
+      updateArgs({
+        ...args,
+        bondsToHighlight: !args.bondsToHighlight
+          ? [[clickedBondId]]
+          : args.bondsToHighlight.map((highlightedBondssColor, colorIdx) => {
+              if (colorIdx === 0) {
+                return [...highlightedBondssColor, clickedBondId];
+              }
+              return highlightedBondssColor;
+            }),
+      });
+    }
+  };
+  return (
+    <RDKitProvider {...RDKitProviderCachingProps}>
+      <MoleculeRepresentation {...args} onBondClick={onBondClick} />
+    </RDKitProvider>
+  );
+};
+
+const TemplateWithOnAtomAndBondClick: Story<MoleculeRepresentationProps> = (args) => {
+  const [_, updateArgs] = useArgs();
+
+  const onAtomClick = (atomId: string) => {
+    const clickedAtomId = parseInt(atomId);
+    if (args.atomsToHighlight?.flat().includes(clickedAtomId)) {
+      updateArgs({
+        ...args,
+        atomsToHighlight: args.atomsToHighlight.map((highlightedAtomsColor) =>
+          highlightedAtomsColor.filter((id) => id !== clickedAtomId),
+        ),
+      });
+    } else {
+      updateArgs({
+        ...args,
+        atomsToHighlight: !args.atomsToHighlight
+          ? [[clickedAtomId]]
+          : args.atomsToHighlight.map((highlightedAtomsColor, colorIdx) => {
+              if (colorIdx === 0) {
+                return [...highlightedAtomsColor, clickedAtomId];
+              }
+              return highlightedAtomsColor;
+            }),
+      });
+    }
+  };
+  const onBondClick = (identifiers: ClickedBondIdentifiers) => {
+    const clickedBondId = parseInt(identifiers.bondId);
+    if (args.bondsToHighlight?.flat().includes(clickedBondId)) {
+      updateArgs({
+        ...args,
+        bondsToHighlight: args.bondsToHighlight.map((highlightedBondssColor) =>
+          highlightedBondssColor.filter((id) => id !== clickedBondId),
+        ),
+      });
+    } else {
+      updateArgs({
+        ...args,
+        bondsToHighlight: !args.bondsToHighlight
+          ? [[clickedBondId]]
+          : args.bondsToHighlight.map((highlightedBondssColor, colorIdx) => {
+              if (colorIdx === 0) {
+                return [...highlightedBondssColor, clickedBondId];
+              }
+              return highlightedBondssColor;
+            }),
+      });
+    }
+  };
+  return (
+    <RDKitProvider {...RDKitProviderCachingProps}>
+      <MoleculeRepresentation {...args} onAtomClick={onAtomClick} onBondClick={onBondClick} />
     </RDKitProvider>
   );
 };
@@ -218,12 +308,22 @@ WithSubstructureAlignmentTemplate.args = {
   listOfSmiles: SMILES_TO_ALIGN_CCO_AGAINST,
 };
 
-export const Clickable = TemplateWithOnAtomClick.bind({});
-Clickable.args = {
+export const ClickableAtoms = TemplateWithOnAtomClick.bind({});
+ClickableAtoms.args = {
   ...PROPS,
 };
 
-export const BigClickableMoleculeWithLoadingSpinner = TemplateWithOnAtomClick.bind({});
+export const ClickableBonds = TemplateWithOnBondClick.bind({});
+ClickableBonds.args = {
+  ...PROPS,
+};
+
+export const ClickableBondsAndAtoms = TemplateWithOnAtomAndBondClick.bind({});
+ClickableBondsAndAtoms.args = {
+  ...PROPS,
+};
+
+export const BigClickableMoleculeWithLoadingSpinner = TemplateWithOnAtomAndBondClick.bind({});
 BigClickableMoleculeWithLoadingSpinner.args = {
   ...PROPS,
   width: 800,

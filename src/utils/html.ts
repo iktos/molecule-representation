@@ -22,13 +22,7 @@
   SOFTWARE.
 */
 
-export interface Rect {
-  height: number;
-  id: string;
-  width: number;
-  x: number;
-  y: number;
-}
+import { Rect } from './hitbox';
 
 export const isElementInParentBySelector = (selector: string, parent: SVGElement) => !!parent.querySelector(selector);
 
@@ -57,25 +51,39 @@ export const waitForChildFromParent = (selector: string, parent: SVGElement) => 
   });
 };
 
-export const appendRectsToSvg = (svg: string, rects: Rect[]) => {
+export const appendHitboxesToSvg = (svg: string, atomsHitboxes: SVGRectElement[], bondsHitBoxes: SVGPathElement[]) => {
   const temp = document.createElement('div');
   temp.innerHTML = svg;
   const svgParsed = temp.getElementsByTagName('svg')[0];
   if (!svgParsed) return;
-  for (const rect of rects) {
-    // @ts-ignore
-    const rectElem = document.createElementNS(svgParsed.attributes['xmlns'].nodeValue, 'rect');
-    rectElem.setAttribute('fill', 'transparent');
-    rectElem.setAttribute('x', rect.x.toString());
-    rectElem.setAttribute('y', rect.y.toString());
-    rectElem.setAttribute('width', rect.width.toString());
-    rectElem.setAttribute('height', rect.height.toString());
-    rectElem.id = rect.id;
-    rectElem.style.cursor = 'pointer';
-    svgParsed.appendChild(rectElem);
+  for (const bondHitBox of bondsHitBoxes) {
+    svgParsed.appendChild(bondHitBox);
   }
-
+  for (const atomHitbox of atomsHitboxes) {
+    svgParsed.appendChild(atomHitbox);
+  }
   return temp.innerHTML;
+};
+
+export const createHitboxRectFromCoords = (coords: Rect) => {
+  const rectElem = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rectElem.setAttribute('fill', 'transparent');
+  rectElem.setAttribute('x', coords.x.toString());
+  rectElem.setAttribute('y', coords.y.toString());
+  rectElem.setAttribute('width', coords.width.toString());
+  rectElem.setAttribute('height', coords.height.toString());
+  rectElem.id = coords.id;
+  rectElem.style.cursor = 'pointer';
+  return rectElem;
+};
+
+export const createHitboxPathFromPath = (path: SVGPathElement, id: string) => {
+  const pathCopy = path.cloneNode(true) as SVGPathElement;
+  pathCopy.id = id;
+  pathCopy.style.stroke = 'transparent';
+  pathCopy.style.strokeWidth = '10px';
+  pathCopy.style.cursor = 'pointer';
+  return pathCopy;
 };
 
 export const getPathEdgePoints = (path: SVGPathElement) => {
