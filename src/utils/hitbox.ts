@@ -37,6 +37,8 @@ import {
   getClickableAtomIdFromAtomIdx,
   getClickableBondId,
   getVisibleAtomSelector,
+  isHighlightingPath,
+  isIdClickedABond,
 } from './identifiers';
 
 export interface Rect {
@@ -88,6 +90,9 @@ export const buildBondsHitboxes = async (numAtoms: number, parentDiv: SVGElement
       const bondIndicies = getBondIdFromClassnames(elem.classList);
       if (bondIndicies.length !== 1 || atomIndicesInBond.length !== 2) {
         console.error('[@iktos-oss/molecule-representation] invalid bond classname', bondIndicies, elem.classList);
+        continue;
+      }
+      if (isHighlightingPath(elem)) {
         continue;
       }
       const hitboxPath = createHitboxPathFromPath(
@@ -146,6 +151,10 @@ const computeClickingHiddenAtomsHitboxCoords = async (
     const matchedElems = (await waitForChildFromParent(getBondSelector(atomIdx), parentDiv)) as SVGPathElement[];
 
     for (const elem of matchedElems) {
+      if ((elem.id && isIdClickedABond(elem.id)) || isHighlightingPath(elem)) {
+        // ignore bonds hitboxes
+        continue;
+      }
       const atomIndicesInBond = getAtomIdsFromClassnames(elem.classList);
 
       const startAtomIndex = atomIndicesInBond[0];

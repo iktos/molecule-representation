@@ -30,6 +30,7 @@ const CLICKABLE_BOND_ID = 'clickable-bond-';
 
 export const isIdClickedAnAtom = (id: string) => id.includes(CLICKABLE_ATOM_ID);
 export const isIdClickedABond = (id: string) => id.includes(CLICKABLE_BOND_ID);
+export const isHighlightingPath = (path: SVGPathElement) => path.style.strokeWidth === '0px';
 
 // clickable atoms ids
 export const getClickableAtomIdFromAtomIdx = (atomIdx: number) => `${CLICKABLE_ATOM_ID}${atomIdx}`;
