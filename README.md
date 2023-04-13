@@ -44,7 +44,12 @@ const props: MoleculeRepresentationProps = {
   ],
   height: 200,
   width: 300,
-  onAtomClick: (atomId: string) => console.log(atomId),
+  onAtomClick: (atomId: string) => console.log("clicked atoms idx:", atomId),
+  onBondClick: (bondIdentifier: ClickedBondIdentifiers) => {
+    console.log("clicked bond idx:", bondIdentifier.bondId)
+    console.log("clicked bond starting atom idx:", bondIdentifier.startAtomId)
+    console.log("clicked bond ending atom idx:", bondIdentifier.endAtomId)
+  }
   zoomable: true
 };
 <MoleculeRepresentation {...props} onAtomClick={} />
