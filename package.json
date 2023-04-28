@@ -37,7 +37,7 @@
     "tsc-check": "tsc --noEmit --skipLibCheck",
     "dist-package": "./tools/dist-package.sh",
     "test-dist-package": "./tools/test-dist-package.sh",
-    "prerun:cp-assets": "mkdir -p public && cp node_modules/@rdkit/rdkit/dist/RDKit_minimal.js node_modules/@rdkit/rdkit/dist/RDKit_minimal.wasm node_modules/@iktos-oss/rdkit-provider/lib/rdkit-worker.js ./public",
+    "prerun:cp-assets": "mkdir -p public && cp node_modules/@rdkit/rdkit/dist/RDKit_minimal.js node_modules/@rdkit/rdkit/dist/RDKit_minimal.wasm node_modules/@iktos-oss/rdkit-provider/lib/rdkit-worker*.js ./public",
     "storybook": "npm run prerun:cp-assets && start-storybook -s ./public -p 6006",
     "build-storybook": "npm run prerun:cp-assets && build-storybook -s ./public",
     "serve-storybook": "serve storybook-static"
@@ -45,7 +45,7 @@
   "author": "Ramzi Oueslati <ramzi.oueslati@iktos.com>",
   "devDependencies": {
     "@babel/core": "^7.20.12",
-    "@iktos-oss/rdkit-provider": "^2.1.0",
+    "@iktos-oss/rdkit-provider": "^2.4.0",
     "@rdkit/rdkit": "^2022.9.3-1.0.0",
     "@storybook/addon-actions": "^6.5.16",
     "@storybook/addon-essentials": "^6.5.16",
@@ -80,7 +80,7 @@
     "serve": "^14.2.0"
   },
   "peerDependencies": {
-    "@iktos-oss/rdkit-provider": "^2.1.0",
+    "@iktos-oss/rdkit-provider": "^2.4.0",
     "@rdkit/rdkit": "^2022.9.3-1.0.0",
     "react": ">=17.0.2",
     "react-dom": ">=17.0.2"
