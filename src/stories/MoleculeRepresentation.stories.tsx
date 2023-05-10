@@ -259,6 +259,17 @@ FromSmarts.args = {
   rdkitProviderProps: RDKitProviderCachingProps,
 };
 
+export const FromSmartsWithExplicitHydronges = Template.bind({});
+FromSmartsWithExplicitHydronges.args = {
+  moleculeRepresetnationProps: {
+    ...PROPS,
+    smarts: 'C1([H])C([H])C([H])C([H])C([H])C1[H]',
+    smiles: undefined,
+    alignmentDetails: undefined,
+  },
+  rdkitProviderProps: { removeHs: false },
+};
+
 export const DrawSmartsAsSmiles = Template.bind({});
 DrawSmartsAsSmiles.args = {
   moleculeRepresetnationProps: {
