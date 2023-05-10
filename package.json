@@ -45,7 +45,7 @@
   "author": "Ramzi Oueslati <ramzi.oueslati@iktos.com>",
   "devDependencies": {
     "@babel/core": "^7.20.12",
-    "@iktos-oss/rdkit-provider": "^2.4.0",
+    "@iktos-oss/rdkit-provider": "^2.4.1",
     "@rdkit/rdkit": "^2022.9.3-1.0.0",
     "@storybook/addon-actions": "^6.5.16",
     "@storybook/addon-essentials": "^6.5.16",
@@ -80,7 +80,7 @@
     "serve": "^14.2.0"
   },
   "peerDependencies": {
-    "@iktos-oss/rdkit-provider": "^2.4.0",
+    "@iktos-oss/rdkit-provider": "^2.4.1",
     "@rdkit/rdkit": "^2022.9.3-1.0.0",
     "react": ">=17.0.2",
     "react-dom": ">=17.0.2"
