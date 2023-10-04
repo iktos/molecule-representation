@@ -1,4 +1,4 @@
-﻿/* 
+﻿/*
   MIT License
 
   Copyright (c) 2023 Iktos
@@ -85,18 +85,21 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       const structureToDraw = smiles || (smarts as string);
       const moleculeDetails = await getMoleculeDetails(worker, { smiles: structureToDraw });
       if (!moleculeDetails) return;
-      setTimeout(
+      const timeout = setTimeout(
         // do this a better way, the issue is when highlighting there is a moment when the atom-0 is rendered at the wrong position (0-0)
         () => {
-          if (onAtomClick) {
-            buildAtomsHitboxes({
-              numAtoms: moleculeDetails.numAtoms,
-              parentDiv: moleculeRef.current,
-              clickableAtoms: clickableAtoms?.clickableAtomsIds,
-            }).then(setAtomsHitbox);
-          }
-          if (onBondClick) {
-            buildBondsHitboxes(moleculeDetails.numAtoms, moleculeRef.current).then(setBondsHitbox);
+          // Check if component is mounted before updating state
+          if (moleculeRef?.current != null) {
+            if (onAtomClick) {
+              buildAtomsHitboxes({
+                numAtoms: moleculeDetails.numAtoms,
+                parentDiv: moleculeRef.current,
+                clickableAtoms: clickableAtoms?.clickableAtomsIds,
+              }).then(setAtomsHitbox);
+            }
+            if (onBondClick) {
+              buildBondsHitboxes(moleculeDetails.numAtoms, moleculeRef.current).then(setBondsHitbox);
+            }
           }
         },
         100,
@@ -105,6 +108,9 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
         shouldComputeRects: false,
         computedRectsForAtoms: clickableAtoms?.clickableAtomsIds ?? [...Array(moleculeDetails.numAtoms).keys()],
       });
+      return () => {
+        clearTimeout(timeout);
+      };
     }, [worker, isClickable, smiles, smarts, clickableAtoms?.clickableAtomsIds, onAtomClick, onBondClick]);
 
     useEffect(() => {
