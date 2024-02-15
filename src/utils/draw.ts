@@ -1,4 +1,4 @@
-﻿/* 
+﻿/*
   MIT License
 
   Copyright (c) 2023 Iktos
@@ -104,6 +104,7 @@ export const get_svg_from_smarts = async (params: DrawSmartsSVGProps, worker: Wo
 
   const { canonicalForm: canonicalSmarts } = await getCanonicalFormForStructure(worker, {
     structure: params.smarts,
+    useQMol: true,
   });
   if (!canonicalSmarts) return null;
 
