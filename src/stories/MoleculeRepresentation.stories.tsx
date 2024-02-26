@@ -24,7 +24,7 @@
 
 import { Meta, Story } from '@storybook/react';
 import { useArgs } from '@storybook/client-api';
-import React from 'react';
+import React, { useState } from 'react';
 
 import {
   MoleculeRepresentation,
@@ -35,6 +35,7 @@ import { BIG_MOLECULE, MOLECULES, RANOLAZINE_SMILES, SEVEN_HIGHLIGHTS_RANOLAZINE
 import { CCO_MOL_BLOCK, SMILES_TO_ALIGN_CCO_AGAINST } from './fixtures/molblock';
 import { RDKitProviderProps } from '@iktos-oss/rdkit-provider';
 import { ClickedBondIdentifiers } from '../utils';
+import Popup from './fixtures/Popup';
 
 export default {
   title: 'components/molecules/MoleculeRepresentation',
@@ -206,6 +207,51 @@ const TemplateWithOnAtomAndBondClick: Story<MoleculeRepresentationProps> = (args
   );
 };
 
+const TemplateWithOnBondAndOnAtomClickAndPopup: Story<MoleculeRepresentationProps> = (args) => {
+  const [popup, setPopup] = useState({ show: false, content: <></>, position: { x: 0, y: 0 } });
+
+  const onBondClick = (identifiers: ClickedBondIdentifiers, event: React.MouseEvent) => {
+    const clickedBondId = parseInt(identifiers.bondId);
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+
+    const content = (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        <div>Bond {clickedBondId} clicked:</div> <div>Start atom id: {identifiers.startAtomId}</div>
+        <div>End atom id: {identifiers.endAtomId}</div>
+      </div>
+    );
+    setPopup({
+      show: true,
+      content: content,
+      position: { x: rect.left + window.scrollX, y: rect.top + window.scrollY },
+    });
+  };
+
+  const onAtomClick = (atomId: string, event: React.MouseEvent) => {
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+
+    const content = <div>Atom {atomId} clicked</div>;
+    setPopup({
+      show: true,
+      content: content,
+      position: { x: rect.left + window.scrollX, y: rect.top + window.scrollY },
+    });
+  };
+
+  const handleClosePopup = () => {
+    setPopup((prev) => ({ ...prev, show: false }));
+  };
+
+  return (
+    <RDKitProvider {...RDKitProviderCachingProps}>
+      <div style={{ position: 'relative' }}>
+        <MoleculeRepresentation {...args} onBondClick={onBondClick} onAtomClick={onAtomClick} />
+        <Popup visible={popup.show} content={popup.content} position={popup.position} onClose={handleClosePopup} />
+      </div>
+    </RDKitProvider>
+  );
+};
+
 export const Default = Template.bind({});
 Default.args = { moleculeRepresetnationProps: PROPS, rdkitProviderProps: RDKitProviderCachingProps };
 
@@ -351,6 +397,12 @@ ClickableSetOfAtoms.args = {
     clickableAtomsIds: [0, 1, 2, 3, 6, 7, 9, 12, 4],
     clickableAtomsBackgroundColor: [53 / 256, 141 / 256, 231 / 256, 0.5],
   },
+};
+
+export const WithOnClickPopup = TemplateWithOnBondAndOnAtomClickAndPopup.bind({});
+WithOnClickPopup.args = {
+  ...PROPS,
+  addAtomIndices: true,
 };
 
 export const ThousandMolecules = TemplateOfListOfMoleculesRepresentations.bind({});
