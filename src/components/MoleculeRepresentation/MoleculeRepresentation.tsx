@@ -174,17 +174,17 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     ]);
 
     const handleOnClick = useCallback(
-      (e: React.MouseEvent) => {
-        const clickedId = (e.target as SVGRectElement).id;
+      (event: React.MouseEvent) => {
+        const clickedId = (event.target as SVGRectElement).id;
         if (isClickable) {
-          e.preventDefault();
-          e.stopPropagation();
+          event.preventDefault();
+          event.stopPropagation();
         }
         if (onBondClick && clickedId && isIdClickedABond(clickedId)) {
-          onBondClick(getClickedBondIdentifiersFromId(clickedId));
+          onBondClick(getClickedBondIdentifiersFromId(clickedId), event);
         }
         if (onAtomClick && clickedId && isIdClickedAnAtom(clickedId)) {
-          onAtomClick(getAtomIdxFromClickableId(clickedId));
+          onAtomClick(getAtomIdxFromClickableId(clickedId), event);
         }
       },
       [onAtomClick, onBondClick, isClickable],
@@ -230,8 +230,8 @@ interface MoleculeRepresentationBaseProps {
   details?: Record<string, unknown>;
   height: number;
   id?: string;
-  onAtomClick?: (atomId: string) => void;
-  onBondClick?: (clickedBondIdentifiers: ClickedBondIdentifiers) => void;
+  onAtomClick?: (atomId: string, event: React.MouseEvent) => void;
+  onBondClick?: (clickedBondIdentifiers: ClickedBondIdentifiers, event: React.MouseEvent) => void;
   style?: CSSProperties;
   showLoadingSpinner?: boolean;
   showSmartsAsSmiles?: boolean;
