@@ -208,6 +208,7 @@ const TemplateWithOnAtomAndBondClick: Story<MoleculeRepresentationProps> = (args
 };
 
 const TemplateWithOnBondAndOnAtomClickAndPopup: Story<MoleculeRepresentationProps> = (args) => {
+  // or use event.target as anchor instead of position
   const [popup, setPopup] = useState({ show: false, content: <></>, position: { x: 0, y: 0 } });
 
   const onBondClick = (identifiers: ClickedBondIdentifiers, event: React.MouseEvent) => {
@@ -223,6 +224,7 @@ const TemplateWithOnBondAndOnAtomClickAndPopup: Story<MoleculeRepresentationProp
     setPopup({
       show: true,
       content: content,
+      // or use event.target as anchor instead
       position: { x: rect.left + window.scrollX, y: rect.top + window.scrollY },
     });
   };
