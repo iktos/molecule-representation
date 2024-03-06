@@ -42,6 +42,10 @@ import {
   getAtomIdxFromClickableId,
   CLICKABLE_MOLECULE_CLASSNAME,
   ClickedBondIdentifiers,
+  IconCoords,
+  AttachedSvgIcon,
+  computeIconsCoords,
+  appendSvgIconsToSvg,
 } from '../../utils';
 
 export type MoleculeRepresentationProps = SmilesRepresentationProps | SmartsRepresentationProps;
@@ -51,6 +55,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     addAtomIndices = false,
     atomsToHighlight,
     bondsToHighlight,
+    attachedSvgIcons,
     clickableAtoms,
     details,
     height,
@@ -69,10 +74,12 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     ...restOfProps
   }: MoleculeRepresentationProps) => {
     const { worker } = useRDKit();
-    const moleculeRef = useRef<SVGElement>(null);
+    const moleculeRef: React.MutableRefObject<SVGElement | null> = useRef<SVGElement | null>(null);
+    const [isMoleculeRefSet, setIsMoleculeRefSet] = useState(false);
     const [svgContent, setSvgContent] = useState('');
     const [atomsHitbox, setAtomsHitbox] = useState<Array<SVGRectElement>>([]);
     const [bondsHitbox, setBondsHitbox] = useState<SVGPathElement[]>([]);
+    const [iconsCoords, setIconsCoords] = useState<IconCoords[]>([]);
     const isClickable = useMemo(() => !!onAtomClick || !!onBondClick, [onAtomClick, onBondClick]);
     const [shouldComputeRectsDetails, setShouldComputeRectsDetails] = useState<{
       shouldComputeRects: boolean;
@@ -119,6 +126,16 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     }, [shouldComputeRectsDetails, computeClickingRects]);
 
     useEffect(() => {
+      if (!attachedSvgIcons || !moleculeRef.current || !isMoleculeRefSet) {
+        return;
+      }
+      computeIconsCoords({
+        parentDiv: moleculeRef.current,
+        attachedIcons: attachedSvgIcons,
+      }).then(setIconsCoords);
+    }, [attachedSvgIcons, isMoleculeRefSet]);
+
+    useEffect(() => {
       if (!worker) return;
       const computeSvg = async () => {
         const drawingDetails: DrawSmilesSVGProps = {
@@ -140,9 +157,13 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
             : await get_svg(drawingDetails, worker);
         if (!svg) return;
         const svgWithHitBoxes =
-          atomsHitbox.length || bondsHitbox.length ? appendHitboxesToSvg(svg, atomsHitbox, bondsHitbox) : svg;
+          atomsHitbox.length || bondsHitbox.length ? appendHitboxesToSvg(svg, atomsHitbox, bondsHitbox) ?? svg : svg;
         if (svgWithHitBoxes) {
-          setSvgContent(svgWithHitBoxes);
+          if (iconsCoords.length) {
+            setSvgContent(appendSvgIconsToSvg(svgWithHitBoxes, iconsCoords) ?? svgWithHitBoxes);
+          } else {
+            setSvgContent(svgWithHitBoxes);
+          }
         }
         setShouldComputeRectsDetails((prev) => {
           const shouldInitClickableRects = isClickable && !prev.computedRectsForAtoms.length;
@@ -171,6 +192,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       worker,
       clickableAtoms,
       alignmentDetails,
+      iconsCoords,
     ]);
 
     const handleOnClick = useCallback(
@@ -197,7 +219,10 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
 
     const svgElement = createSvgElement(svgContent, {
       'data-testid': 'clickable-molecule',
-      ref: moleculeRef,
+      ref: (node: SVGElement) => {
+        moleculeRef.current = node;
+        setIsMoleculeRefSet(true);
+      },
       ...restOfProps,
       className: `molecule ${isClickable ? CLICKABLE_MOLECULE_CLASSNAME : ''}`,
       height,
@@ -226,6 +251,7 @@ interface MoleculeRepresentationBaseProps {
   addAtomIndices?: boolean;
   atomsToHighlight?: number[][];
   bondsToHighlight?: number[][];
+  attachedSvgIcons?: AttachedSvgIcon[];
   clickableAtoms?: ClickableAtoms;
   details?: Record<string, unknown>;
   height: number;

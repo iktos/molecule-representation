@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 
-import { ClickedBondIdentifiers } from './hitbox';
+import { ClickedBondIdentifiers } from './dom-computation';
 
 export const CLICKABLE_MOLECULE_CLASSNAME = 'clickable-molecule';
 const CLICKABLE_ATOM_ID = 'clickable-atom-';

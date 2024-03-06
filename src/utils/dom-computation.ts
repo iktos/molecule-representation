@@ -26,6 +26,7 @@ import {
   createHitboxPathFromPath,
   createHitboxRectFromCoords,
   getPathEdgePoints,
+  getSvgDimensionsWithAppendedElements,
   isElementInParentBySelector,
   waitForChildFromParent,
 } from './html';
@@ -47,6 +48,23 @@ export interface Rect {
   width: number;
   x: number;
   y: number;
+}
+
+export interface AttachedSvgIcon {
+  svg: string;
+  atomIds: number[];
+  bondIds: number[];
+}
+
+export interface IconCoords {
+  svg: string;
+  scale: number;
+  placements: IconsPlacements[];
+}
+
+interface IconsPlacements {
+  xTranslate: number;
+  yTranslate: number;
 }
 
 export interface ClickedBondIdentifiers {
@@ -78,6 +96,76 @@ export const buildAtomsHitboxes = async ({
 
   const hitboxesCoords = [...rectsForVisibleAtoms, ...rectsForHiddenAtoms];
   return hitboxesCoords.map((rect) => createHitboxRectFromCoords(rect));
+};
+
+export const computeIconsCoords = async ({
+  parentDiv,
+  attachedIcons,
+}: {
+  parentDiv: SVGElement | null;
+  attachedIcons: AttachedSvgIcon[];
+}): Promise<IconCoords[]> => {
+  if (!parentDiv) return [];
+  const coords: IconCoords[] = [];
+
+  for (const attachedIcon of attachedIcons) {
+    const attachedIconPlacements: IconsPlacements[] = [];
+    const svgDimenssions = getSvgDimensionsWithAppendedElements(attachedIcon.svg);
+    if (!svgDimenssions) {
+      continue;
+    }
+    const { width: svgWidth, height: svgHeight } = svgDimenssions;
+    const refrenceAtom = (await waitForChildFromParent('ellipse.atom-0', parentDiv)) as SVGPathElement[];
+    const scale = refrenceAtom.length
+      ? Math.min(
+          (parseFloat(refrenceAtom[0].getAttribute('rx') ?? '0.5') * 2) / svgWidth,
+          (parseFloat(refrenceAtom[0].getAttribute('ry') ?? '0.5') * 2) / svgHeight,
+        )
+      : 1;
+    const processedBondIds = new Set();
+
+    for (const atomId of attachedIcon.atomIds) {
+      const matchedElems = (await waitForChildFromParent(`ellipse.atom-${atomId}`, parentDiv)) as SVGPathElement[];
+      for (const matchedElem of matchedElems) {
+        const { left, top } = matchedElem.getBoundingClientRect();
+        attachedIconPlacements.push({
+          xTranslate: left - (svgWidth * scale) / 2,
+          yTranslate: top - (svgHeight * scale) / 2,
+        });
+      }
+    }
+
+    for (const bondId of attachedIcon.bondIds) {
+      const matchedElems = (await waitForChildFromParent(`.bond-${bondId}`, parentDiv)) as SVGPathElement[];
+      for (const matchedElem of matchedElems) {
+        if (processedBondIds.has(bondId)) {
+          // this is here to ignore double bonds
+          continue;
+        }
+        if (matchedElem.id.includes('clickable') || isHighlightingPath(matchedElem)) {
+          // ignore clickable & highlighted (they are duplicates of the original bond)
+          continue;
+        }
+        const { start, end } = getPathEdgePoints(matchedElem);
+        attachedIconPlacements.push({
+          xTranslate: (start.x + end.x) / 2,
+          yTranslate: (start.y + end.y) / 2,
+        });
+        processedBondIds.add(bondId);
+      }
+    }
+
+    coords.push({
+      svg: attachedIcon.svg,
+      scale,
+      placements: attachedIconPlacements.map((placement) => ({
+        ...placement,
+        xTranslate: placement.xTranslate - (svgWidth * scale) / 2,
+        yTranslate: placement.yTranslate - (svgHeight * scale) / 2,
+      })),
+    });
+  }
+  return coords;
 };
 
 export const buildBondsHitboxes = async (numAtoms: number, parentDiv: SVGElement | null): Promise<SVGPathElement[]> => {
