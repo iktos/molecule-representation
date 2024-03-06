@@ -39,20 +39,11 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
   });
   if (!canonicalSmiles) return null;
 
-  const {
-    width,
-    height,
-    details = {},
-    atomsToHighlight,
-    bondsToHighlight,
-    isClickable,
-    clickableAtoms,
-    alignmentDetails,
-  } = params;
+  const { width, height, details = {}, atomsToHighlight, bondsToHighlight, clickableAtoms, alignmentDetails } = params;
   const highlightBondColors = getHighlightColors(bondsToHighlight);
   const highlightAtomColors = getHighlightColors(atomsToHighlight);
-  const moleculeDetails = isClickable ? await getMoleculeDetails(worker, { smiles: canonicalSmiles }) : null;
-  if (isClickable && moleculeDetails) {
+  const moleculeDetails = await getMoleculeDetails(worker, { smiles: canonicalSmiles });
+  if (moleculeDetails) {
     setHighlightColorForClickableMolecule({
       nbAtoms: moleculeDetails.numAtoms,
       clickableAtoms,
@@ -60,8 +51,8 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
       highlightAtomColors,
     });
   }
-  const atomsToDrawWithHighlight =
-    isClickable && moleculeDetails ? [...Array(moleculeDetails.numAtoms).keys()] : atomsToHighlight?.flat() ?? [];
+  if (!moleculeDetails) return null;
+  const atomsToDrawWithHighlight = [...Array(moleculeDetails.numAtoms).keys()];
   const bondsToDrawWithHighlight = bondsToHighlight?.flat() ?? [];
 
   try {

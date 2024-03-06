@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 
-import { Rect } from './hitbox';
+import { IconCoords, Rect } from './dom-computation';
 
 export const isElementInParentBySelector = (selector: string, parent: SVGElement) => !!parent.querySelector(selector);
 
@@ -81,11 +81,32 @@ export const createHitboxPathFromPath = (path: SVGPathElement, id: string) => {
   const pathCopy = path.cloneNode(true) as SVGPathElement;
   pathCopy.id = id;
   pathCopy.style.stroke = 'transparent';
-  pathCopy.style.strokeWidth = '10px';
+  pathCopy.style.strokeWidth = '20px';
   pathCopy.style.cursor = 'pointer';
   return pathCopy;
 };
 
+export const getSvgDimensionsWithAppendedElements = (svg: string) => {
+  const temp = document.createElement('div');
+  temp.innerHTML = svg;
+  const svgParsed = temp.getElementsByTagName('svg')[0];
+  if (!svgParsed) return null;
+
+  const widthStr = svgParsed.getAttribute('width');
+  const heightStr = svgParsed.getAttribute('height');
+
+  if (!widthStr) {
+    return null;
+  }
+  if (!heightStr) {
+    return null;
+  }
+  const width = parseFloat(widthStr);
+  const height = parseFloat(heightStr);
+  temp.innerHTML = '';
+
+  return { width, height };
+};
 export const getPathEdgePoints = (path: SVGPathElement) => {
   const length = path.getTotalLength();
   return {
@@ -93,4 +114,30 @@ export const getPathEdgePoints = (path: SVGPathElement) => {
     end: path.getPointAtLength(length),
     length,
   };
+};
+
+export const appendSvgIconsToSvg = (svg: string, iconsCoords: IconCoords[]) => {
+  const temp = document.createElement('div');
+  temp.innerHTML = svg;
+  const svgParsed = temp.getElementsByTagName('svg')[0];
+  if (!svgParsed) return;
+
+  for (const iconCoord of iconsCoords) {
+    const parser = new DOMParser();
+    const iconSvg = parser.parseFromString(iconCoord.svg, 'image/svg+xml').documentElement;
+
+    for (const placement of iconCoord.placements) {
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute(
+        'transform',
+        `scale(${iconCoord.scale}) translate(${placement.xTranslate / iconCoord.scale}, ${
+          placement.yTranslate / iconCoord.scale
+        })`,
+      );
+      g.appendChild(iconSvg.cloneNode(true));
+      svgParsed.appendChild(g);
+    }
+  }
+
+  return temp.innerHTML;
 };
