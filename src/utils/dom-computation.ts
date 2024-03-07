@@ -127,10 +127,12 @@ export const computeIconsCoords = async ({
     for (const atomId of attachedIcon.atomIds) {
       const matchedElems = (await waitForChildFromParent(`ellipse.atom-${atomId}`, parentDiv)) as SVGPathElement[];
       for (const matchedElem of matchedElems) {
-        const { left, top } = matchedElem.getBoundingClientRect();
+        const { x, y } = matchedElem.getBoundingClientRect();
+        const cx = parseFloat(matchedElem.getAttribute('cx') ?? `${x}`);
+        const cy = parseFloat(matchedElem.getAttribute('cy') ?? `${y}`);
         attachedIconPlacements.push({
-          xTranslate: left - (svgWidth * scale) / 2,
-          yTranslate: top - (svgHeight * scale) / 2,
+          xTranslate: cx,
+          yTranslate: cy,
         });
       }
     }
