@@ -134,6 +134,7 @@ export const appendSvgIconsToSvg = (svg: string, iconsCoords: IconCoords[]) => {
           placement.yTranslate / iconCoord.scale
         })`,
       );
+      g.setAttribute('pointer-events', 'none');
       g.appendChild(iconSvg.cloneNode(true));
       svgParsed.appendChild(g);
     }
