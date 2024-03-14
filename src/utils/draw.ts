@@ -21,13 +21,14 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 */
-
-import { RDKitColor, getSvgFromSmarts } from '@iktos-oss/rdkit-provider';
 import {
   getSvg,
   getMoleculeDetails,
   getCanonicalFormForStructure,
   getMatchingSubstructure,
+  convertMolNotation,
+  getSvgFromSmarts,
+  RDKitColor,
 } from '@iktos-oss/rdkit-provider';
 import { AlignmentDetails } from '../components';
 import { HIGHLIGHT_RDKIT_COLORS, TRANSPARANT_RDKIT_COLOR } from '../constants';
@@ -93,15 +94,17 @@ export const get_svg_from_smarts = async (params: DrawSmartsSVGProps, worker: Wo
   if (!worker) return null;
   if (!params.smarts) return null;
 
-  const { canonicalForm: canonicalSmarts } = await getCanonicalFormForStructure(worker, {
-    structure: params.smarts,
+  const { structure } = await convertMolNotation(worker, {
+    moleculeString: params.smarts,
+    targetNotation: 'smarts',
     useQMol: true,
   });
-  if (!canonicalSmarts) return null;
+
+  if (!structure) return null;
 
   const { svg } = await getSvgFromSmarts(worker, {
     ...params,
-    smarts: canonicalSmarts,
+    smarts: structure,
   });
   return svg;
 };
