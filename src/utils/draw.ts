@@ -26,7 +26,6 @@ import {
   getMoleculeDetails,
   getCanonicalFormForStructure,
   getMatchingSubstructure,
-  convertMolNotation,
   getSvgFromSmarts,
   RDKitColor,
 } from '@iktos-oss/rdkit-provider';
@@ -94,17 +93,16 @@ export const get_svg_from_smarts = async (params: DrawSmartsSVGProps, worker: Wo
   if (!worker) return null;
   if (!params.smarts) return null;
 
-  const { structure } = await convertMolNotation(worker, {
-    moleculeString: params.smarts,
-    targetNotation: 'smarts',
+  const { canonicalForm: canonicalSmarts } = await getCanonicalFormForStructure(worker, {
+    structure: params.smarts,
     useQMol: true,
   });
 
-  if (!structure) return null;
+  if (!canonicalSmarts) return null;
 
   const { svg } = await getSvgFromSmarts(worker, {
     ...params,
-    smarts: structure,
+    smarts: canonicalSmarts,
   });
   return svg;
 };
