@@ -83,7 +83,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     const [bondsHitbox, setBondsHitbox] = useState<SVGPathElement[]>([]);
     const [iconsCoords, setIconsCoords] = useState<IconCoords[]>([]);
     const isClickable = useMemo(() => !!onAtomClick || !!onBondClick, [onAtomClick, onBondClick]);
-    const isHoverable = useMemo(() => !!onMouseHover || !onMouseLeave, [onMouseHover, onMouseLeave]);
+    const isHoverable = useMemo(() => !!onMouseHover || !!onMouseLeave, [onMouseHover, onMouseLeave]);
     const isClickableOrHoverable = useMemo(() => isClickable || isHoverable, [isClickable, isHoverable]);
     const [shouldComputeRectsDetails, setShouldComputeRectsDetails] = useState<{
       shouldComputeRects: boolean;
@@ -100,7 +100,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
         // do this a better way, the issue is when highlighting there is a moment when the atom-0 is rendered at the wrong position (0-0)
         () => {
           // Check if component is mounted before updating state
-          if (moleculeRef?.current != null) {
+          if (moleculeRef?.current != null && isClickableOrHoverable) {
             buildAtomsHitboxes({
               numAtoms: moleculeDetails.numAtoms,
               parentDiv: moleculeRef.current,
@@ -118,12 +118,15 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       );
       setShouldComputeRectsDetails({
         shouldComputeRects: false,
-        computedRectsForAtoms: clickableAtoms?.clickableAtomsIds ?? [...Array(moleculeDetails.numAtoms).keys()],
+        computedRectsForAtoms:
+          clickableAtoms && clickableAtoms.clickableAtomsIds && clickableAtoms.clickableAtomsIds.length
+            ? clickableAtoms.clickableAtomsIds
+            : [...Array(moleculeDetails.numAtoms).keys()],
       });
       return () => {
         clearTimeout(timeout);
       };
-    }, [worker, onAtomClick, onBondClick, isClickableOrHoverable, smiles, smarts, clickableAtoms?.clickableAtomsIds]);
+    }, [worker, onAtomClick, onBondClick, isClickableOrHoverable, smiles, smarts, clickableAtoms]);
 
     useEffect(() => {
       if (!shouldComputeRectsDetails.shouldComputeRects) return;
@@ -175,7 +178,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
           const areClickableRectsOutOfDate =
             isClickableOrHoverable &&
             clickableAtoms &&
-            !isEqual(prev.computedRectsForAtoms, clickableAtoms?.clickableAtomsIds);
+            !isEqual(new Set(prev.computedRectsForAtoms), new Set(clickableAtoms.clickableAtomsIds));
           if (shouldInitClickableRects || areClickableRectsOutOfDate) {
             return { ...prev, shouldComputeRects: true };
           }
