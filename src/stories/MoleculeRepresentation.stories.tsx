@@ -34,7 +34,7 @@ import { RDKitColor, RDKitProvider } from '@iktos-oss/rdkit-provider';
 import { BIG_MOLECULE, MOLECULES, RANOLAZINE_SMILES, SEVEN_HIGHLIGHTS_RANOLAZINE } from './fixtures/molecules';
 import { CCO_MOL_BLOCK, SMILES_TO_ALIGN_CCO_AGAINST } from './fixtures/molblock';
 import { RDKitProviderProps } from '@iktos-oss/rdkit-provider';
-import { ClickedBondIdentifiers } from '../utils';
+import { BondIdentifiers } from '../utils';
 import Popup from './fixtures/Popup';
 
 export default {
@@ -121,7 +121,7 @@ const TemplateWithOnAtomClick: Story<MoleculeRepresentationProps> = (args) => {
 const TemplateWithOnBondClick: Story<MoleculeRepresentationProps> = (args) => {
   const [_, updateArgs] = useArgs();
 
-  const onBondClick = (identifiers: ClickedBondIdentifiers) => {
+  const onBondClick = (identifiers: BondIdentifiers) => {
     const clickedBondId = parseInt(identifiers.bondId);
     if (args.bondsToHighlight?.flat().includes(clickedBondId)) {
       updateArgs({
@@ -153,8 +153,11 @@ const TemplateWithOnBondClick: Story<MoleculeRepresentationProps> = (args) => {
 
 const TemplateWithOnAtomAndBondClick: Story<MoleculeRepresentationProps> = (args) => {
   const [_, updateArgs] = useArgs();
+  const [hoveredAtomId, setHoveredAtomId] = useState<number | null>(null);
+  const [hoveredBondId, setHoveredBondId] = useState<number | null>(null);
 
   const onAtomClick = (atomId: string) => {
+    setHoveredAtomId(null);
     const clickedAtomId = parseInt(atomId);
     if (args.atomsToHighlight?.flat().includes(clickedAtomId)) {
       updateArgs({
@@ -177,7 +180,8 @@ const TemplateWithOnAtomAndBondClick: Story<MoleculeRepresentationProps> = (args
       });
     }
   };
-  const onBondClick = (identifiers: ClickedBondIdentifiers) => {
+  const onBondClick = (identifiers: BondIdentifiers) => {
+    setHoveredBondId(null);
     const clickedBondId = parseInt(identifiers.bondId);
     if (args.bondsToHighlight?.flat().includes(clickedBondId)) {
       updateArgs({
@@ -200,9 +204,56 @@ const TemplateWithOnAtomAndBondClick: Story<MoleculeRepresentationProps> = (args
       });
     }
   };
+  const onMouseHover = (
+    {
+      atomId,
+      bondIdentifiers,
+    }: {
+      atomId?: string;
+      bondIdentifiers?: BondIdentifiers;
+    },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    event: React.MouseEvent,
+  ) => {
+    if (!atomId && !bondIdentifiers) {
+      setHoveredAtomId(null);
+      setHoveredBondId(null);
+    }
+    if (atomId) {
+      setHoveredBondId(null);
+      setHoveredAtomId(parseInt(atomId));
+    }
+    if (bondIdentifiers) {
+      setHoveredAtomId(null);
+      setHoveredBondId(parseInt(bondIdentifiers.bondId));
+    }
+  };
+  const onMouseLeave = () => {
+    setHoveredAtomId(null);
+    setHoveredBondId(null);
+  };
+
+  const isHoveredAtomInClickedAtoms =
+    hoveredAtomId !== null && args.atomsToHighlight?.some((atomHighlight) => atomHighlight.includes(hoveredAtomId));
+  const isHoveredBondInClickedAtoms =
+    hoveredBondId !== null && args.bondsToHighlight?.some((bondHighlight) => bondHighlight.includes(hoveredBondId));
   return (
     <RDKitProvider {...RDKitProviderCachingProps}>
-      <MoleculeRepresentation {...args} onAtomClick={onAtomClick} onBondClick={onBondClick} />
+      <MoleculeRepresentation
+        {...args}
+        atomsToHighlight={[
+          ...(args.atomsToHighlight ? args.atomsToHighlight : [[]]),
+          hoveredAtomId !== null && !isHoveredAtomInClickedAtoms ? [hoveredAtomId] : [],
+        ]}
+        bondsToHighlight={[
+          ...(args.bondsToHighlight ? args.bondsToHighlight : [[]]),
+          hoveredBondId !== null && !isHoveredBondInClickedAtoms ? [hoveredBondId] : [],
+        ]}
+        onAtomClick={onAtomClick}
+        onBondClick={onBondClick}
+        onMouseHover={onMouseHover}
+        onMouseLeave={onMouseLeave}
+      />
     </RDKitProvider>
   );
 };
@@ -211,7 +262,7 @@ const TemplateWithOnBondAndOnAtomClickAndPopup: Story<MoleculeRepresentationProp
   // or use event.target as anchor instead of position
   const [popup, setPopup] = useState({ show: false, content: <></>, position: { x: 0, y: 0 } });
 
-  const onBondClick = (identifiers: ClickedBondIdentifiers, event: React.MouseEvent) => {
+  const onBondClick = (identifiers: BondIdentifiers, event: React.MouseEvent) => {
     const clickedBondId = parseInt(identifiers.bondId);
     const rect = (event.target as HTMLElement).getBoundingClientRect();
 

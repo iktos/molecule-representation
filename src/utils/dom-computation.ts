@@ -67,7 +67,7 @@ interface IconsPlacements {
   yTranslate: number;
 }
 
-export interface ClickedBondIdentifiers {
+export interface BondIdentifiers {
   bondId: string;
   startAtomId: string;
   endAtomId: string;
@@ -77,10 +77,12 @@ export const buildAtomsHitboxes = async ({
   numAtoms,
   parentDiv,
   clickableAtoms,
+  isClickable,
 }: {
   numAtoms: number;
   parentDiv: SVGElement | null;
   clickableAtoms?: number[];
+  isClickable: boolean;
 }) => {
   if (!parentDiv) return [];
 
@@ -95,7 +97,7 @@ export const buildAtomsHitboxes = async ({
   const rectsForVisibleAtoms = await computeClickingVisibleAtomsHitboxCoords(numAtoms, parentDiv, atomsToIgnore);
 
   const hitboxesCoords = [...rectsForVisibleAtoms, ...rectsForHiddenAtoms];
-  return hitboxesCoords.map((rect) => createHitboxRectFromCoords(rect));
+  return hitboxesCoords.map((rect) => createHitboxRectFromCoords({ coords: rect, isClickable }));
 };
 
 export const computeIconsCoords = async ({
@@ -170,7 +172,15 @@ export const computeIconsCoords = async ({
   return coords;
 };
 
-export const buildBondsHitboxes = async (numAtoms: number, parentDiv: SVGElement | null): Promise<SVGPathElement[]> => {
+export const buildBondsHitboxes = async ({
+  numAtoms,
+  parentDiv,
+  isClickable,
+}: {
+  numAtoms: number;
+  parentDiv: SVGElement | null;
+  isClickable: boolean;
+}): Promise<SVGPathElement[]> => {
   if (!parentDiv) return [];
   const clickablePaths: SVGPathElement[] = [];
   for (let atomIdx = 0; atomIdx < numAtoms; atomIdx++) {
@@ -185,14 +195,15 @@ export const buildBondsHitboxes = async (numAtoms: number, parentDiv: SVGElement
       if (isHighlightingPath(elem)) {
         continue;
       }
-      const hitboxPath = createHitboxPathFromPath(
-        elem,
-        getClickableBondId({
+      const hitboxPath = createHitboxPathFromPath({
+        path: elem,
+        id: getClickableBondId({
           bondId: bondIndicies[0],
           startAtomId: atomIndicesInBond[0],
           endAtomId: atomIndicesInBond[1],
         }),
-      );
+        isClickable,
+      });
       clickablePaths.push(hitboxPath);
     }
   }
