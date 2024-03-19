@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 
-import { ClickedBondIdentifiers } from './dom-computation';
+import { BondIdentifiers } from './dom-computation';
 
 export const CLICKABLE_MOLECULE_CLASSNAME = 'clickable-molecule';
 const CLICKABLE_ATOM_ID = 'clickable-atom-';
@@ -51,7 +51,7 @@ export const getClickableBondId = ({
   startAtomId: number;
   endAtomId: number;
 }) => `${CLICKABLE_BOND_ID}${bondId}:-atoms:${startAtomId}-${endAtomId}`;
-export const getClickedBondIdentifiersFromId = (id: string): ClickedBondIdentifiers => {
+export const getClickedBondIdentifiersFromId = (id: string): BondIdentifiers => {
   const [bondId, atomsId] = id.replace(CLICKABLE_BOND_ID, '').replace('-atoms', '').split('::');
   const [startAtomId, endAtomId] = atomsId.split('-');
   return { bondId, startAtomId, endAtomId };

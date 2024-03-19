@@ -65,7 +65,7 @@ export const appendHitboxesToSvg = (svg: string, atomsHitboxes: SVGRectElement[]
   return temp.innerHTML;
 };
 
-export const createHitboxRectFromCoords = (coords: Rect) => {
+export const createHitboxRectFromCoords = ({ coords, isClickable }: { coords: Rect; isClickable: boolean }) => {
   const rectElem = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
   rectElem.setAttribute('fill', 'transparent');
   rectElem.setAttribute('x', coords.x.toString());
@@ -73,16 +73,29 @@ export const createHitboxRectFromCoords = (coords: Rect) => {
   rectElem.setAttribute('width', coords.width.toString());
   rectElem.setAttribute('height', coords.height.toString());
   rectElem.id = coords.id;
-  rectElem.style.cursor = 'pointer';
+  if (isClickable) {
+    rectElem.style.cursor = 'pointer';
+  }
+
   return rectElem;
 };
 
-export const createHitboxPathFromPath = (path: SVGPathElement, id: string) => {
+export const createHitboxPathFromPath = ({
+  path,
+  id,
+  isClickable,
+}: {
+  path: SVGPathElement;
+  id: string;
+  isClickable: boolean;
+}) => {
   const pathCopy = path.cloneNode(true) as SVGPathElement;
   pathCopy.id = id;
   pathCopy.style.stroke = 'transparent';
   pathCopy.style.strokeWidth = '20px';
-  pathCopy.style.cursor = 'pointer';
+  if (isClickable) {
+    pathCopy.style.cursor = 'pointer';
+  }
   return pathCopy;
 };
 

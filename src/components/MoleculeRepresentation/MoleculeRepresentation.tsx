@@ -41,7 +41,7 @@ import {
   isIdClickedAnAtom,
   getAtomIdxFromClickableId,
   CLICKABLE_MOLECULE_CLASSNAME,
-  ClickedBondIdentifiers,
+  BondIdentifiers,
   IconCoords,
   AttachedSvgIcon,
   computeIconsCoords,
@@ -62,6 +62,8 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     id,
     onAtomClick,
     onBondClick,
+    onMouseHover,
+    onMouseLeave,
     smarts,
     smiles,
     alignmentDetails,
@@ -81,6 +83,8 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     const [bondsHitbox, setBondsHitbox] = useState<SVGPathElement[]>([]);
     const [iconsCoords, setIconsCoords] = useState<IconCoords[]>([]);
     const isClickable = useMemo(() => !!onAtomClick || !!onBondClick, [onAtomClick, onBondClick]);
+    const isHoverable = useMemo(() => !!onMouseHover || !onMouseLeave, [onMouseHover, onMouseLeave]);
+    const isClickableOrHoverable = useMemo(() => isClickable || isHoverable, [isClickable, isHoverable]);
     const [shouldComputeRectsDetails, setShouldComputeRectsDetails] = useState<{
       shouldComputeRects: boolean;
       computedRectsForAtoms: number[];
@@ -88,7 +92,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
 
     const computeClickingRects = useCallback(async () => {
       if (!worker) return;
-      if (!isClickable) return;
+      if (!isClickableOrHoverable) return;
       const structureToDraw = smiles || (smarts as string);
       const moleculeDetails = await getMoleculeDetails(worker, { smiles: structureToDraw });
       if (!moleculeDetails) return;
@@ -97,16 +101,17 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
         () => {
           // Check if component is mounted before updating state
           if (moleculeRef?.current != null) {
-            if (onAtomClick) {
-              buildAtomsHitboxes({
-                numAtoms: moleculeDetails.numAtoms,
-                parentDiv: moleculeRef.current,
-                clickableAtoms: clickableAtoms?.clickableAtomsIds,
-              }).then(setAtomsHitbox);
-            }
-            if (onBondClick) {
-              buildBondsHitboxes(moleculeDetails.numAtoms, moleculeRef.current).then(setBondsHitbox);
-            }
+            buildAtomsHitboxes({
+              numAtoms: moleculeDetails.numAtoms,
+              parentDiv: moleculeRef.current,
+              clickableAtoms: clickableAtoms?.clickableAtomsIds,
+              isClickable: !!onAtomClick,
+            }).then(setAtomsHitbox);
+            buildBondsHitboxes({
+              numAtoms: moleculeDetails.numAtoms,
+              parentDiv: moleculeRef.current,
+              isClickable: !!onBondClick,
+            }).then(setBondsHitbox);
           }
         },
         100,
@@ -118,7 +123,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       return () => {
         clearTimeout(timeout);
       };
-    }, [worker, isClickable, smiles, smarts, clickableAtoms?.clickableAtomsIds, onAtomClick, onBondClick]);
+    }, [worker, onAtomClick, onBondClick, isClickableOrHoverable, smiles, smarts, clickableAtoms?.clickableAtomsIds]);
 
     useEffect(() => {
       if (!shouldComputeRectsDetails.shouldComputeRects) return;
@@ -166,9 +171,11 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
           }
         }
         setShouldComputeRectsDetails((prev) => {
-          const shouldInitClickableRects = isClickable && !prev.computedRectsForAtoms.length;
+          const shouldInitClickableRects = isClickableOrHoverable && !prev.computedRectsForAtoms.length;
           const areClickableRectsOutOfDate =
-            isClickable && clickableAtoms && !isEqual(prev.computedRectsForAtoms, clickableAtoms?.clickableAtomsIds);
+            isClickableOrHoverable &&
+            clickableAtoms &&
+            !isEqual(prev.computedRectsForAtoms, clickableAtoms?.clickableAtomsIds);
           if (shouldInitClickableRects || areClickableRectsOutOfDate) {
             return { ...prev, shouldComputeRects: true };
           }
@@ -193,6 +200,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       clickableAtoms,
       alignmentDetails,
       iconsCoords,
+      isClickableOrHoverable,
     ]);
 
     const handleOnClick = useCallback(
@@ -211,6 +219,33 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       },
       [onAtomClick, onBondClick, isClickable],
     );
+    const handleOnMouseHover = useCallback(
+      (event: React.MouseEvent) => {
+        if (!onMouseHover) {
+          return;
+        }
+        const hoveredElementId = (event.target as SVGRectElement).id;
+        onMouseHover(
+          {
+            atomId: isIdClickedAnAtom(hoveredElementId) ? getAtomIdxFromClickableId(hoveredElementId) : undefined,
+            bondIdentifiers: isIdClickedABond(hoveredElementId)
+              ? getClickedBondIdentifiersFromId(hoveredElementId)
+              : undefined,
+          },
+          event,
+        );
+      },
+      [onMouseHover],
+    );
+    const handleOnMouseLeave = useCallback(
+      (event: React.MouseEvent) => {
+        if (!onMouseLeave) {
+          return;
+        }
+        onMouseLeave(event);
+      },
+      [onMouseLeave],
+    );
 
     if (!svgContent) {
       if (showLoadingSpinner) return <Spinner width={width} height={height} />;
@@ -224,10 +259,12 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
         setIsMoleculeRefSet(true);
       },
       ...restOfProps,
-      className: `molecule ${isClickable ? CLICKABLE_MOLECULE_CLASSNAME : ''}`,
+      className: `molecule ${isClickableOrHoverable ? CLICKABLE_MOLECULE_CLASSNAME : ''}`,
       height,
       id,
       onClick: handleOnClick,
+      onMouseOver: handleOnMouseHover,
+      onMouseLeave: handleOnMouseLeave,
       style,
       title: smiles,
       width,
@@ -257,7 +294,12 @@ interface MoleculeRepresentationBaseProps {
   height: number;
   id?: string;
   onAtomClick?: (atomId: string, event: React.MouseEvent) => void;
-  onBondClick?: (clickedBondIdentifiers: ClickedBondIdentifiers, event: React.MouseEvent) => void;
+  onBondClick?: (clickedBondIdentifiers: BondIdentifiers, event: React.MouseEvent) => void;
+  onMouseHover?: (
+    { atomId, bondIdentifiers }: { atomId?: string; bondIdentifiers?: BondIdentifiers },
+    event: React.MouseEvent,
+  ) => void;
+  onMouseLeave?: (event: React.MouseEvent) => void;
   style?: CSSProperties;
   showLoadingSpinner?: boolean;
   showSmartsAsSmiles?: boolean;
