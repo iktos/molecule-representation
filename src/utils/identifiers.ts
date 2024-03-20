@@ -63,7 +63,5 @@ export const getBondIdFromClassnames = (bondClassnames: DOMTokenList) =>
     .map(parseFloat);
 
 // selectors
-export const getVisibleAtomSelector = (atomIdx: number) =>
-  `.${CLICKABLE_MOLECULE_CLASSNAME} .atom-${atomIdx}:not(ellipse):not([class*="bond"])`;
-
-export const getBondSelector = (atomIdx: number) => `.${CLICKABLE_MOLECULE_CLASSNAME} .atom-${atomIdx}[class*="bond"]`;
+export const getBondSelectorIdentifier = (atomIdx: number) => `.atom-${atomIdx}[class*="bond"]`;
+export const getAtomHighliteEllipseIdentifier = (atomIdx: number) => `ellipse.atom-${atomIdx}`;

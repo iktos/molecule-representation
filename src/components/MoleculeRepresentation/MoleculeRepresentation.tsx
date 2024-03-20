@@ -79,61 +79,13 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     const moleculeRef: React.MutableRefObject<SVGElement | null> = useRef<SVGElement | null>(null);
     const [isMoleculeRefSet, setIsMoleculeRefSet] = useState(false);
     const [svgContent, setSvgContent] = useState('');
-    const [atomsHitbox, setAtomsHitbox] = useState<Array<SVGRectElement>>([]);
-    const [bondsHitbox, setBondsHitbox] = useState<SVGPathElement[]>([]);
     const [iconsCoords, setIconsCoords] = useState<IconCoords[]>([]);
     const isClickable = useMemo(() => !!onAtomClick || !!onBondClick, [onAtomClick, onBondClick]);
     const isHoverable = useMemo(() => !!onMouseHover || !!onMouseLeave, [onMouseHover, onMouseLeave]);
     const isClickableOrHoverable = useMemo(() => isClickable || isHoverable, [isClickable, isHoverable]);
-    const [shouldComputeRectsDetails, setShouldComputeRectsDetails] = useState<{
-      shouldComputeRects: boolean;
-      computedRectsForAtoms: number[];
-    }>({ shouldComputeRects: false, computedRectsForAtoms: [] });
-
-    const computeClickingRects = useCallback(async () => {
-      if (!worker) return;
-      if (!isClickableOrHoverable) return;
-      const structureToDraw = smiles || (smarts as string);
-      const moleculeDetails = await getMoleculeDetails(worker, { smiles: structureToDraw });
-      if (!moleculeDetails) return;
-      const timeout = setTimeout(
-        // do this a better way, the issue is when highlighting there is a moment when the atom-0 is rendered at the wrong position (0-0)
-        () => {
-          // Check if component is mounted before updating state
-          if (moleculeRef?.current != null && isClickableOrHoverable) {
-            buildAtomsHitboxes({
-              numAtoms: moleculeDetails.numAtoms,
-              parentDiv: moleculeRef.current,
-              clickableAtoms: clickableAtoms?.clickableAtomsIds,
-              isClickable: !!onAtomClick,
-            }).then(setAtomsHitbox);
-            buildBondsHitboxes({
-              numAtoms: moleculeDetails.numAtoms,
-              parentDiv: moleculeRef.current,
-              isClickable: !!onBondClick,
-            }).then(setBondsHitbox);
-          }
-        },
-        100,
-      );
-      setShouldComputeRectsDetails({
-        shouldComputeRects: false,
-        computedRectsForAtoms:
-          clickableAtoms && clickableAtoms.clickableAtomsIds && clickableAtoms.clickableAtomsIds.length
-            ? clickableAtoms.clickableAtomsIds
-            : [...Array(moleculeDetails.numAtoms).keys()],
-      });
-      return () => {
-        clearTimeout(timeout);
-      };
-    }, [worker, onAtomClick, onBondClick, isClickableOrHoverable, smiles, smarts, clickableAtoms]);
 
     useEffect(() => {
-      if (!shouldComputeRectsDetails.shouldComputeRects) return;
-      computeClickingRects();
-    }, [shouldComputeRectsDetails, computeClickingRects]);
-
-    useEffect(() => {
+      // the compute svg icons to add effect
       if (!attachedSvgIcons || !moleculeRef.current || !isMoleculeRefSet) {
         return;
       }
@@ -144,8 +96,11 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     }, [attachedSvgIcons, isMoleculeRefSet]);
 
     useEffect(() => {
+      // the compute svg effect
       if (!worker) return;
       const computeSvg = async () => {
+        const structureToDraw = smarts || smiles;
+        if (!structureToDraw) return;
         const drawingDetails: DrawSmilesSVGProps = {
           smiles: (smarts || smiles) as string,
           width,
@@ -159,39 +114,41 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
         };
         const isSmartsAValidSmiles =
           showSmartsAsSmiles && !!smarts && (await isValidSmiles(worker, { smiles: smarts })).isValid;
-        const svg =
+        let svg =
           smarts && !isSmartsAValidSmiles
             ? await get_svg_from_smarts({ smarts, width, height }, worker)
             : await get_svg(drawingDetails, worker);
         if (!svg) return;
-        const svgWithHitBoxes =
-          atomsHitbox.length || bondsHitbox.length ? appendHitboxesToSvg(svg, atomsHitbox, bondsHitbox) ?? svg : svg;
-        if (svgWithHitBoxes) {
-          if (iconsCoords.length) {
-            setSvgContent(appendSvgIconsToSvg(svgWithHitBoxes, iconsCoords) ?? svgWithHitBoxes);
-          } else {
-            setSvgContent(svgWithHitBoxes);
-          }
+        if (isClickableOrHoverable) {
+          const moleculeDetails = await getMoleculeDetails(worker, { smiles: structureToDraw });
+          if (!moleculeDetails) return;
+
+          const atomsHitbox = await buildAtomsHitboxes({
+            numAtoms: moleculeDetails.numAtoms,
+            svg,
+            clickableAtoms: clickableAtoms?.clickableAtomsIds ? new Set(clickableAtoms.clickableAtomsIds) : null,
+            isClickable: !!onAtomClick,
+          });
+          const bondsHitbox = await buildBondsHitboxes({
+            numAtoms: moleculeDetails.numAtoms,
+            svg,
+            isClickable: !!onBondClick,
+          });
+          svg =
+            atomsHitbox.length || bondsHitbox.length ? appendHitboxesToSvg(svg, atomsHitbox, bondsHitbox) ?? svg : svg;
         }
-        setShouldComputeRectsDetails((prev) => {
-          const shouldInitClickableRects = isClickableOrHoverable && !prev.computedRectsForAtoms.length;
-          const areClickableRectsOutOfDate =
-            isClickableOrHoverable &&
-            clickableAtoms &&
-            !isEqual(new Set(prev.computedRectsForAtoms), new Set(clickableAtoms.clickableAtomsIds));
-          if (shouldInitClickableRects || areClickableRectsOutOfDate) {
-            return { ...prev, shouldComputeRects: true };
-          }
-          return prev;
-        });
+        if (iconsCoords.length) {
+          svg = appendSvgIconsToSvg(svg, iconsCoords) ?? svg;
+        }
+        setSvgContent(svg);
       };
       computeSvg();
     }, [
       showSmartsAsSmiles,
       smiles,
       smarts,
-      atomsHitbox,
-      bondsHitbox,
+      onAtomClick,
+      onBondClick,
       atomsToHighlight,
       addAtomIndices,
       details,

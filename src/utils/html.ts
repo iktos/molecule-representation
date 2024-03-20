@@ -22,9 +22,7 @@
   SOFTWARE.
 */
 
-import { IconCoords, Rect } from './dom-computation';
-
-export const isElementInParentBySelector = (selector: string, parent: SVGElement) => !!parent.querySelector(selector);
+import { IconCoords } from './dom-computation';
 
 export const waitForChildFromParent = (selector: string, parent: SVGElement) => {
   return new Promise((resolve) => {
@@ -51,7 +49,11 @@ export const waitForChildFromParent = (selector: string, parent: SVGElement) => 
   });
 };
 
-export const appendHitboxesToSvg = (svg: string, atomsHitboxes: SVGRectElement[], bondsHitBoxes: SVGPathElement[]) => {
+export const appendHitboxesToSvg = (
+  svg: string,
+  atomsHitboxes: SVGEllipseElement[],
+  bondsHitBoxes: SVGPathElement[],
+) => {
   const temp = document.createElement('div');
   temp.innerHTML = svg;
   const svgParsed = temp.getElementsByTagName('svg')[0];
@@ -65,19 +67,23 @@ export const appendHitboxesToSvg = (svg: string, atomsHitboxes: SVGRectElement[]
   return temp.innerHTML;
 };
 
-export const createHitboxRectFromCoords = ({ coords, isClickable }: { coords: Rect; isClickable: boolean }) => {
-  const rectElem = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-  rectElem.setAttribute('fill', 'transparent');
-  rectElem.setAttribute('x', coords.x.toString());
-  rectElem.setAttribute('y', coords.y.toString());
-  rectElem.setAttribute('width', coords.width.toString());
-  rectElem.setAttribute('height', coords.height.toString());
-  rectElem.id = coords.id;
+export const createHitboxFromAtomEllipse = ({
+  ellipse,
+  id,
+  isClickable,
+}: {
+  ellipse: SVGEllipseElement;
+  id: string;
+  isClickable: boolean;
+}) => {
+  const pathCopy = ellipse.cloneNode(true) as SVGEllipseElement;
+  pathCopy.id = id;
+  pathCopy.style.stroke = 'transparent';
+  pathCopy.style.fill = 'transparent';
   if (isClickable) {
-    rectElem.style.cursor = 'pointer';
+    pathCopy.style.cursor = 'pointer';
   }
-
-  return rectElem;
+  return pathCopy;
 };
 
 export const createHitboxPathFromPath = ({
