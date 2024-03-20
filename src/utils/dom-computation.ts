@@ -23,32 +23,21 @@
 */
 
 import {
+  createHitboxFromAtomEllipse,
   createHitboxPathFromPath,
-  createHitboxRectFromCoords,
   getPathEdgePoints,
   getSvgDimensionsWithAppendedElements,
-  isElementInParentBySelector,
   waitForChildFromParent,
 } from './html';
 import {
+  getAtomHighliteEllipseIdentifier,
   getAtomIdsFromClassnames,
-  getAtomIdxFromClickableId,
   getBondIdFromClassnames,
-  getBondSelector,
+  getBondSelectorIdentifier,
   getClickableAtomIdFromAtomIdx,
   getClickableBondId,
-  getVisibleAtomSelector,
   isHighlightingPath,
-  isIdClickedABond,
 } from './identifiers';
-
-export interface Rect {
-  height: number;
-  id: string;
-  width: number;
-  x: number;
-  y: number;
-}
 
 export interface AttachedSvgIcon {
   svg: string;
@@ -72,33 +61,6 @@ export interface BondIdentifiers {
   startAtomId: string;
   endAtomId: string;
 }
-
-export const buildAtomsHitboxes = async ({
-  numAtoms,
-  parentDiv,
-  clickableAtoms,
-  isClickable,
-}: {
-  numAtoms: number;
-  parentDiv: SVGElement | null;
-  clickableAtoms?: number[];
-  isClickable: boolean;
-}) => {
-  if (!parentDiv) return [];
-
-  let atomsToIgnore = clickableAtoms
-    ? new Set([...Array(numAtoms).keys()].filter((atomIdx) => !clickableAtoms.includes(atomIdx)))
-    : null;
-  const rectsForHiddenAtoms = await computeClickingHiddenAtomsHitboxCoords(numAtoms, parentDiv, atomsToIgnore);
-  const processedHiddenAtomsIds = rectsForHiddenAtoms.map((rect) => getAtomIdxFromClickableId(rect.id)).map(parseFloat);
-  atomsToIgnore = atomsToIgnore
-    ? new Set([...atomsToIgnore, ...processedHiddenAtomsIds])
-    : new Set(processedHiddenAtomsIds);
-  const rectsForVisibleAtoms = await computeClickingVisibleAtomsHitboxCoords(numAtoms, parentDiv, atomsToIgnore);
-
-  const hitboxesCoords = [...rectsForVisibleAtoms, ...rectsForHiddenAtoms];
-  return hitboxesCoords.map((rect) => createHitboxRectFromCoords({ coords: rect, isClickable }));
-};
 
 export const computeIconsCoords = async ({
   parentDiv,
@@ -173,18 +135,25 @@ export const computeIconsCoords = async ({
 };
 
 export const buildBondsHitboxes = async ({
+  // this doesn't look into dom, but uses the svg string instead
   numAtoms,
-  parentDiv,
+  svg,
   isClickable,
 }: {
   numAtoms: number;
-  parentDiv: SVGElement | null;
+  svg: string;
   isClickable: boolean;
 }): Promise<SVGPathElement[]> => {
-  if (!parentDiv) return [];
+  const parentWrapper = document.createElement('div');
+  parentWrapper.innerHTML = svg;
+  const parentSvg = parentWrapper.getElementsByTagName('svg')[0];
+  if (!parentSvg) return [];
   const clickablePaths: SVGPathElement[] = [];
   for (let atomIdx = 0; atomIdx < numAtoms; atomIdx++) {
-    const matchedElems = (await waitForChildFromParent(getBondSelector(atomIdx), parentDiv)) as SVGPathElement[];
+    const matchedElems = (await waitForChildFromParent(
+      getBondSelectorIdentifier(atomIdx),
+      parentSvg,
+    )) as SVGPathElement[];
     for (const elem of matchedElems) {
       const atomIndicesInBond = getAtomIdsFromClassnames(elem.classList);
       const bondIndicies = getBondIdFromClassnames(elem.classList);
@@ -209,84 +178,47 @@ export const buildBondsHitboxes = async ({
   }
   return clickablePaths;
 };
+export const buildAtomsHitboxes = async ({
+  // this doesn't look into dom, but uses the svg string instead
+  numAtoms,
+  svg,
+  clickableAtoms,
+  isClickable,
+}: {
+  numAtoms: number;
+  svg: string;
+  clickableAtoms: Set<number> | null;
+  isClickable: boolean;
+}): Promise<SVGEllipseElement[]> => {
+  const parentWrapper = document.createElement('div');
+  parentWrapper.innerHTML = svg;
+  const parentSvg = parentWrapper.getElementsByTagName('svg')[0];
+  if (!parentSvg) return [];
 
-const computeClickingVisibleAtomsHitboxCoords = async (
-  numAtoms: number,
-  parentDiv: SVGElement,
-  atomsToIgnore: Set<number> | null = null,
-) => {
-  const rects: Rect[] = [];
+  const clickablePaths: SVGEllipseElement[] = [];
   for (let atomIdx = 0; atomIdx < numAtoms; atomIdx++) {
-    if (atomsToIgnore && atomsToIgnore.has(atomIdx)) continue;
-
-    const matchedElems = (await waitForChildFromParent(getVisibleAtomSelector(atomIdx), parentDiv)) as HTMLElement[];
-
-    for (const elem of matchedElems) {
-      const elemPosition = elem.getBoundingClientRect();
-      const parent = elem.parentElement;
-      if (!parent) {
-        continue;
-      }
-      const parentPosition = parent.getBoundingClientRect();
-      rects.push({
-        id: getClickableAtomIdFromAtomIdx(atomIdx),
-        x: elemPosition.x - parentPosition.x,
-        y: elemPosition.y - parentPosition.y,
-        height: elemPosition.height,
-        width: elemPosition.width,
-      });
+    if (clickableAtoms && !clickableAtoms.has(atomIdx)) {
+      // ignore non clickableAtoms if clickableAtoms is specified
+      continue;
     }
-  }
-  return rects;
-};
-
-const computeClickingHiddenAtomsHitboxCoords = async (
-  numAtoms: number,
-  parentDiv: SVGElement,
-  atomsToIgnore: Set<number> | null = null,
-) => {
-  const rects: Rect[] = [];
-  for (let atomIdx = 0; atomIdx < numAtoms; atomIdx++) {
-    if (atomsToIgnore && atomsToIgnore.has(atomIdx)) continue;
-
-    const matchedElems = (await waitForChildFromParent(getBondSelector(atomIdx), parentDiv)) as SVGPathElement[];
+    const matchedElems = (await waitForChildFromParent(
+      getAtomHighliteEllipseIdentifier(atomIdx),
+      parentSvg,
+    )) as SVGEllipseElement[];
 
     for (const elem of matchedElems) {
-      if ((elem.id && isIdClickedABond(elem.id)) || isHighlightingPath(elem)) {
-        // ignore bonds hitboxes
-        continue;
-      }
       const atomIndicesInBond = getAtomIdsFromClassnames(elem.classList);
-
-      const startAtomIndex = atomIndicesInBond[0];
-      const endAtomIndex = atomIndicesInBond[1];
-
-      const { end, length, start } = getPathEdgePoints(elem);
-      if (
-        !isElementInParentBySelector(getVisibleAtomSelector(startAtomIndex), parentDiv) &&
-        !atomsToIgnore?.has(startAtomIndex)
-      ) {
-        rects.push({
-          id: getClickableAtomIdFromAtomIdx(startAtomIndex),
-          x: start.x - length / 4,
-          y: start.y - length / 4,
-          height: length / 2,
-          width: length / 2,
-        });
+      if (atomIndicesInBond.length !== 1) {
+        console.warn('Found an ellipse with more than one atomid');
+        continue;
       }
-      if (
-        !isElementInParentBySelector(getVisibleAtomSelector(endAtomIndex), parentDiv) &&
-        !atomsToIgnore?.has(endAtomIndex)
-      ) {
-        rects.push({
-          id: getClickableAtomIdFromAtomIdx(endAtomIndex),
-          x: end.x - length / 4,
-          y: end.y - length / 4,
-          height: length / 2,
-          width: length / 2,
-        });
-      }
+      const hitboxPath = createHitboxFromAtomEllipse({
+        ellipse: elem,
+        id: getClickableAtomIdFromAtomIdx(atomIdx),
+        isClickable,
+      });
+      clickablePaths.push(hitboxPath);
     }
   }
-  return rects;
+  return clickablePaths;
 };
