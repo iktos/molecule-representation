@@ -120,17 +120,20 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
             : await get_svg(drawingDetails, worker);
         if (!svg) return;
         if (isClickableOrHoverable) {
-          const moleculeDetails = await getMoleculeDetails(worker, { smiles: structureToDraw });
+          const moleculeDetails = await getMoleculeDetails(worker, {
+            smiles: structureToDraw,
+            returnFullDetails: true,
+          });
           if (!moleculeDetails) return;
 
           const atomsHitbox = await buildAtomsHitboxes({
-            numAtoms: moleculeDetails.numAtoms,
+            numAtoms: moleculeDetails.NumHeavyAtoms,
             svg,
             clickableAtoms: clickableAtoms?.clickableAtomsIds ? new Set(clickableAtoms.clickableAtomsIds) : null,
             isClickable: !!onAtomClick,
           });
           const bondsHitbox = await buildBondsHitboxes({
-            numAtoms: moleculeDetails.numAtoms,
+            numAtoms: moleculeDetails.NumHeavyAtoms,
             svg,
             isClickable: !!onBondClick,
           });

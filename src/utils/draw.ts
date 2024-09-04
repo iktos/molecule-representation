@@ -42,17 +42,17 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
   const { width, height, details = {}, atomsToHighlight, bondsToHighlight, clickableAtoms, alignmentDetails } = params;
   const highlightBondColors = getHighlightColors(bondsToHighlight);
   const highlightAtomColors = getHighlightColors(atomsToHighlight);
-  const moleculeDetails = await getMoleculeDetails(worker, { smiles: canonicalSmiles });
+  const moleculeDetails = await getMoleculeDetails(worker, { smiles: canonicalSmiles, returnFullDetails: true });
   if (moleculeDetails) {
     setHighlightColorForClickableMolecule({
-      nbAtoms: moleculeDetails.numAtoms,
+      nbAtoms: moleculeDetails.NumHeavyAtoms,
       clickableAtoms,
       atomsToHighlight,
       highlightAtomColors,
     });
   }
   if (!moleculeDetails) return null;
-  const atomsToDrawWithHighlight = [...Array(moleculeDetails.numAtoms).keys()];
+  const atomsToDrawWithHighlight = [...Array(moleculeDetails.NumHeavyAtoms).keys()];
   const bondsToDrawWithHighlight = bondsToHighlight?.flat() ?? [];
 
   try {
