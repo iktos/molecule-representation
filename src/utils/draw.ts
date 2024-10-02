@@ -28,6 +28,7 @@ import {
   getMatchingSubstructure,
   getSvgFromSmarts,
   RDKitColor,
+  convertMolNotation,
 } from '@iktos-oss/rdkit-provider';
 import { AlignmentDetails } from '../components';
 import { HIGHLIGHT_RDKIT_COLORS, TRANSPARANT_RDKIT_COLOR } from '../constants';
@@ -142,9 +143,15 @@ const addAlignmentFromMolBlock = async ({
   if (!alignmentDetails.highlightColor) {
     return;
   }
+  const { structure: alignmentDetailsSmilesToMatch } = await convertMolNotation(worker, {
+    moleculeString: alignmentDetails.molBlock,
+    targetNotation: 'smiles',
+    sourceNotation: 'molblock',
+  });
+  if (!alignmentDetailsSmilesToMatch) return;
   const matchDetails = await getMatchingSubstructure(worker, {
     structure: smiles,
-    substructure: alignmentDetails.molBlock,
+    substructure: alignmentDetailsSmilesToMatch,
   });
   if (!matchDetails) return;
   const { matchingAtoms, matchingBonds } = matchDetails;
