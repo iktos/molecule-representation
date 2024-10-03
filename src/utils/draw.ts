@@ -145,7 +145,7 @@ const addAlignmentFromMolBlock = async ({
   }
   const { structure: alignmentDetailsSmilesToMatch } = await convertMolNotation(worker, {
     moleculeString: alignmentDetails.molBlock,
-    targetNotation: 'smiles',
+    targetNotation: 'smarts',
     sourceNotation: 'molblock',
   });
   if (!alignmentDetailsSmilesToMatch) return;
