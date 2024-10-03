@@ -10,7 +10,9 @@ Visit https://molecule-representation-ramziweslati.vercel.app for a demo of the 
 
 #### Initial setup  
 
-Wrap your components in an RDKit provider from [@iktos-oss/rdkit-provider](https://github.com/iktos/rdkit-provider)
+1- First follow [the @iktos-oss/rdkit-provider setup](https://github.com/iktos/rdkit-provider?tab=readme-ov-file#setup).
+
+2- Wrap your components in an RDKit provider from [@iktos-oss/rdkit-provider](https://github.com/iktos/rdkit-provider)
 
 ```html
 import { RDKitProvider } from '@iktos-oss/rdkit-provider';
@@ -19,7 +21,7 @@ import { RDKitProvider } from '@iktos-oss/rdkit-provider';
 </RDKitProvider>`
 ```
 
-For better preformance we recommend enabling the caching of rdkitjs JsMol instances, this can be done using RDKitProvider
+3- For better preformance we recommend enabling the caching of rdkitjs JsMol instances, this can be done using RDKitProvider
 ```html
 import { RDKitProvider } from '@iktos-oss/rdkit-provider';
 <RDKitProvider  cache={{ enableJsMolCaching: true, maxJsMolsCached: 30 }}>
