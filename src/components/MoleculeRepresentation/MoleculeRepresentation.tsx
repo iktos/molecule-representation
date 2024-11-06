@@ -54,6 +54,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
   ({
     addAtomIndices = false,
     atomsToHighlight,
+    highlightColor,
     bondsToHighlight,
     attachedSvgIcons,
     clickableAtoms,
@@ -108,6 +109,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
           height,
           details: { ...details, addAtomIndices },
           alignmentDetails,
+          highlightColor,
           atomsToHighlight,
           bondsToHighlight,
           heatmapAtomsWeights,
@@ -167,6 +169,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       iconsCoords,
       isClickableOrHoverable,
       heatmapAtomsWeights,
+      highlightColor,
     ]);
 
     const handleOnClick = useCallback(
@@ -252,6 +255,7 @@ export default MoleculeRepresentation;
 
 interface MoleculeRepresentationBaseProps {
   addAtomIndices?: boolean;
+  highlightColor?: RDKitColor;
   atomsToHighlight?: number[][];
   bondsToHighlight?: number[][];
   attachedSvgIcons?: AttachedSvgIcon[];

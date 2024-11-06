@@ -343,6 +343,7 @@ MoleculeWithAtomsHeatmap.args = {
   moleculeRepresetnationProps: {
     ...PROPS,
     heatmapAtomsWeights: { 1: 3, 2: 1, 0: 0.5, 5: 5 },
+    highlightColor: [1, 0.435, 0, 0.5],
   },
   rdkitProviderProps: RDKitProviderCachingProps,
 };

@@ -49,9 +49,10 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
     clickableAtoms,
     alignmentDetails,
     heatmapAtomsWeights,
+    highlightColor,
   } = params;
-  const highlightBondColors = getHighlightColors(bondsToHighlight);
-  const highlightAtomColors = getHighlightColors(atomsToHighlight);
+  const highlightBondColors = getHighlightColors(bondsToHighlight, highlightColor);
+  const highlightAtomColors = getHighlightColors(atomsToHighlight, highlightColor);
   const moleculeDetails = await getMoleculeDetails(worker, { smiles: canonicalSmiles, returnFullDetails: true });
   if (moleculeDetails) {
     setHighlightColorForClickableMolecule({
@@ -69,8 +70,8 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
   if (heatmapAtomsWeights && Object.keys(heatmapAtomsWeights).length) {
     const maxWeight = Math.max(...Object.values(heatmapAtomsWeights));
     const minWeight = Math.min(...Object.values(heatmapAtomsWeights));
-    const minRadius = 0.2;
-    const maxRadius = 0.6;
+    const minRadius = 0.15;
+    const maxRadius = 0.5;
     const weightRange = maxWeight - minWeight || 1;
 
     for (const [atomIdx, weight] of Object.entries(heatmapAtomsWeights)) {
@@ -78,7 +79,10 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
       const radius = minRadius + normalizedWeight * (maxRadius - minRadius);
       highlightAtomRadii[+atomIdx] = radius;
     }
-    const heatmapHighlightColors = getHighlightColors([Object.keys(heatmapAtomsWeights).map((v) => +v)]);
+    const heatmapHighlightColors = getHighlightColors(
+      [Object.keys(heatmapAtomsWeights).map((v) => +v)],
+      highlightColor,
+    );
     Object.assign(highlightAtomColors, heatmapHighlightColors);
   }
   try {
@@ -134,13 +138,13 @@ export const get_svg_from_smarts = async (params: DrawSmartsSVGProps, worker: Wo
   return svg;
 };
 
-const getHighlightColors = (items?: number[][]) => {
+const getHighlightColors = (items?: number[][], highlightColor?: RDKitColor) => {
   // give each array of atoms a color, enabling multi-color highlights
   const highlightColors: HighlightColors = {};
-  let cpt = 0;
   const limit = HIGHLIGHT_RDKIT_COLORS.length;
+  let cpt = 0;
   for (const item of items ?? []) {
-    const color = HIGHLIGHT_RDKIT_COLORS[cpt++ % limit];
+    const color = highlightColor ?? HIGHLIGHT_RDKIT_COLORS[cpt++ % limit];
     if (!item) continue;
     for (const atomIdx of item) {
       highlightColors[atomIdx] = color;
@@ -257,6 +261,7 @@ export interface DrawSmilesSVGProps {
   details?: Record<string, unknown>;
   alignmentDetails?: AlignmentDetails;
   heatmapAtomsWeights?: Record<number, number>;
+  highlightColor?: RDKitColor;
   atomsToHighlight?: number[][];
   bondsToHighlight?: number[][];
   isClickable?: boolean;
