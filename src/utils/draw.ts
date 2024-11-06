@@ -40,7 +40,16 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
   });
   if (!canonicalSmiles) return null;
 
-  const { width, height, details = {}, atomsToHighlight, bondsToHighlight, clickableAtoms, alignmentDetails } = params;
+  const {
+    width,
+    height,
+    details = {},
+    atomsToHighlight,
+    bondsToHighlight,
+    clickableAtoms,
+    alignmentDetails,
+    heatmapAtomsWeights,
+  } = params;
   const highlightBondColors = getHighlightColors(bondsToHighlight);
   const highlightAtomColors = getHighlightColors(atomsToHighlight);
   const moleculeDetails = await getMoleculeDetails(worker, { smiles: canonicalSmiles, returnFullDetails: true });
@@ -56,6 +65,22 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
   const atomsToDrawWithHighlight = [...Array(moleculeDetails.NumHeavyAtoms).keys()];
   const bondsToDrawWithHighlight = bondsToHighlight?.flat() ?? [];
 
+  const highlightAtomRadii: Record<number, number> = {};
+  if (heatmapAtomsWeights && Object.keys(heatmapAtomsWeights).length) {
+    const maxWeight = Math.max(...Object.values(heatmapAtomsWeights));
+    const minWeight = Math.min(...Object.values(heatmapAtomsWeights));
+    const minRadius = 0.2;
+    const maxRadius = 0.6;
+    const weightRange = maxWeight - minWeight || 1;
+
+    for (const [atomIdx, weight] of Object.entries(heatmapAtomsWeights)) {
+      const normalizedWeight = (weight - minWeight) / weightRange;
+      const radius = minRadius + normalizedWeight * (maxRadius - minRadius);
+      highlightAtomRadii[+atomIdx] = radius;
+    }
+    const heatmapHighlightColors = getHighlightColors([Object.keys(heatmapAtomsWeights).map((v) => +v)]);
+    Object.assign(highlightAtomColors, heatmapHighlightColors);
+  }
   try {
     if (alignmentDetails) {
       await addAlignmentFromMolBlock({
@@ -70,13 +95,14 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
     }
     const rdkitDrawingOptions = {
       ...DEFAULT_DRAWING_DETAILS,
-      ...details,
       width,
       height,
       atoms: atomsToDrawWithHighlight,
       bonds: bondsToDrawWithHighlight,
       highlightAtomColors,
       highlightBondColors,
+      highlightAtomRadii,
+      ...details, // user custom rdkit drawning params
     };
     const { svg } = await getSvg(worker, {
       smiles: canonicalSmiles,
@@ -230,6 +256,7 @@ export interface DrawSmilesSVGProps {
   height: number;
   details?: Record<string, unknown>;
   alignmentDetails?: AlignmentDetails;
+  heatmapAtomsWeights?: Record<number, number>;
   atomsToHighlight?: number[][];
   bondsToHighlight?: number[][];
   isClickable?: boolean;

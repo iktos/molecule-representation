@@ -73,6 +73,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     width,
     zoomable = false,
     displayZoomToolbar = DisplayZoomToolbar.ON_HOVER,
+    heatmapAtomsWeights,
     ...restOfProps
   }: MoleculeRepresentationProps) => {
     const { worker } = useRDKit();
@@ -109,6 +110,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
           alignmentDetails,
           atomsToHighlight,
           bondsToHighlight,
+          heatmapAtomsWeights,
           isClickable,
           clickableAtoms,
         };
@@ -164,6 +166,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       alignmentDetails,
       iconsCoords,
       isClickableOrHoverable,
+      heatmapAtomsWeights,
     ]);
 
     const handleOnClick = useCallback(
@@ -270,6 +273,7 @@ interface MoleculeRepresentationBaseProps {
   /** Zoomable molecule with meta key + mouse wheel or toolbar */
   zoomable?: boolean;
   displayZoomToolbar?: DisplayZoomToolbarStrings;
+  heatmapAtomsWeights?: Record<number, number>;
 }
 
 interface SmilesRepresentationProps extends MoleculeRepresentationBaseProps {
