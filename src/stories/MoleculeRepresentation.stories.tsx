@@ -338,6 +338,15 @@ HighlightedBonds.args = {
   rdkitProviderProps: RDKitProviderCachingProps,
 };
 
+export const MoleculeWithAtomsHeatmap = Template.bind({});
+MoleculeWithAtomsHeatmap.args = {
+  moleculeRepresetnationProps: {
+    ...PROPS,
+    heatmapAtomsWeights: { 1: 3, 2: 1, 0: 0.5, 5: 5 },
+  },
+  rdkitProviderProps: RDKitProviderCachingProps,
+};
+
 export const AtomsWithCustomSVGIcons = Template.bind({});
 AtomsWithCustomSVGIcons.args = {
   moleculeRepresetnationProps: {
