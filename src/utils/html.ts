@@ -22,32 +22,7 @@
   SOFTWARE.
 */
 
-import { IconCoords } from './dom-computation';
-
-export const waitForChildFromParent = (selector: string, parent: SVGElement) => {
-  return new Promise((resolve) => {
-    if (parent.querySelector(selector)) {
-      return resolve(parent.querySelectorAll(selector));
-    }
-    const timeout = setTimeout(() => {
-      observer.disconnect();
-      resolve([]);
-    }, 100);
-
-    const observer = new MutationObserver((_) => {
-      if (parent.querySelector(selector)) {
-        clearTimeout(timeout);
-        resolve(parent.querySelectorAll(selector));
-        observer.disconnect();
-      }
-    });
-
-    observer.observe(parent, {
-      childList: true,
-      subtree: true,
-    });
-  });
-};
+import { IconCoords } from './svg-computation';
 
 export const appendHitboxesToSvg = (
   svg: string,

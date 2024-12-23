@@ -22,12 +22,13 @@
   SOFTWARE.
 */
 
+import { cloneElement } from 'react';
+import convert from 'react-from-dom';
 import {
   createHitboxFromAtomEllipse,
   createHitboxPathFromPath,
   getPathEdgePoints,
   getSvgDimensionsWithAppendedElements,
-  waitForChildFromParent,
 } from './html';
 import {
   getAtomHighliteEllipseIdentifier,
@@ -39,38 +40,29 @@ import {
   isHighlightingPath,
 } from './identifiers';
 
-export interface AttachedSvgIcon {
-  svg: string;
-  atomIds: number[];
-  bondIds: number[];
-}
+export const createSvgElement = (svg: string, svgProps?: Record<string, unknown>) => {
+  if (!svg) throw new Error('Missing svg');
 
-export interface IconCoords {
-  svg: string;
-  scale: number;
-  placements: IconsPlacements[];
-}
+  const element = convert(svg);
 
-interface IconsPlacements {
-  xTranslate: number;
-  yTranslate: number;
-}
+  if (!element) throw new Error('Could not convert to element');
 
-export interface BondIdentifiers {
-  bondId: string;
-  startAtomId: string;
-  endAtomId: string;
-}
+  return cloneElement(element as React.ReactElement, { ...svgProps });
+};
 
 export const computeIconsCoords = async ({
-  parentDiv,
+  svg,
   attachedIcons,
 }: {
-  parentDiv: SVGElement | null;
+  svg: string;
   attachedIcons: AttachedSvgIcon[];
 }): Promise<IconCoords[]> => {
-  if (!parentDiv) return [];
+  if (!svg) return [];
   const coords: IconCoords[] = [];
+  const parentWrapper = document.createElement('div');
+  parentWrapper.innerHTML = svg;
+  const parentSvg = parentWrapper.getElementsByTagName('svg')[0];
+  if (!parentSvg) return [];
 
   for (const attachedIcon of attachedIcons) {
     const attachedIconPlacements: IconsPlacements[] = [];
@@ -79,17 +71,17 @@ export const computeIconsCoords = async ({
       continue;
     }
     const { width: svgWidth, height: svgHeight } = svgDimenssions;
-    const refrenceAtom = (await waitForChildFromParent('ellipse.atom-0', parentDiv)) as SVGPathElement[];
-    const scale = refrenceAtom.length
+    const referenceAtoms = Array.from(parentSvg.querySelectorAll('ellipse.atom-0')) as SVGPathElement[];
+    const scale = referenceAtoms.length
       ? Math.min(
-          (parseFloat(refrenceAtom[0].getAttribute('rx') ?? '0.5') * 2) / svgWidth,
-          (parseFloat(refrenceAtom[0].getAttribute('ry') ?? '0.5') * 2) / svgHeight,
+          (parseFloat(referenceAtoms[0].getAttribute('rx') ?? '0.5') * 2) / svgWidth,
+          (parseFloat(referenceAtoms[0].getAttribute('ry') ?? '0.5') * 2) / svgHeight,
         )
       : 1;
     const processedBondIds = new Set();
 
     for (const atomId of attachedIcon.atomIds) {
-      const matchedElems = (await waitForChildFromParent(`ellipse.atom-${atomId}`, parentDiv)) as SVGPathElement[];
+      const matchedElems = Array.from(parentSvg.querySelectorAll(`ellipse.atom-${atomId}`)) as SVGPathElement[];
       for (const matchedElem of matchedElems) {
         const { x, y } = matchedElem.getBoundingClientRect();
         const cx = parseFloat(matchedElem.getAttribute('cx') ?? `${x}`);
@@ -102,10 +94,10 @@ export const computeIconsCoords = async ({
     }
 
     for (const bondId of attachedIcon.bondIds) {
-      const matchedElems = (await waitForChildFromParent(`.bond-${bondId}`, parentDiv)) as SVGPathElement[];
+      const matchedElems = Array.from(parentSvg.querySelectorAll(`.bond-${bondId}`)) as SVGPathElement[];
       for (const matchedElem of matchedElems) {
         if (processedBondIds.has(bondId)) {
-          // this is here to ignore double bonds
+          // ignore double bonds
           continue;
         }
         if (matchedElem.id.includes('clickable') || isHighlightingPath(matchedElem)) {
@@ -150,10 +142,7 @@ export const buildBondsHitboxes = async ({
   if (!parentSvg) return [];
   const clickablePaths: SVGPathElement[] = [];
   for (let atomIdx = 0; atomIdx < numAtoms; atomIdx++) {
-    const matchedElems = (await waitForChildFromParent(
-      getBondSelectorIdentifier(atomIdx),
-      parentSvg,
-    )) as SVGPathElement[];
+    const matchedElems = Array.from(parentSvg.querySelectorAll(getBondSelectorIdentifier(atomIdx))) as SVGPathElement[];
     for (const elem of matchedElems) {
       const atomIndicesInBond = getAtomIdsFromClassnames(elem.classList);
       const bondIndicies = getBondIdFromClassnames(elem.classList);
@@ -201,10 +190,9 @@ export const buildAtomsHitboxes = async ({
       // ignore non clickableAtoms if clickableAtoms is specified
       continue;
     }
-    const matchedElems = (await waitForChildFromParent(
-      getAtomHighliteEllipseIdentifier(atomIdx),
-      parentSvg,
-    )) as SVGEllipseElement[];
+    const matchedElems = Array.from(
+      parentSvg.querySelectorAll(getAtomHighliteEllipseIdentifier(atomIdx)),
+    ) as SVGEllipseElement[];
 
     for (const elem of matchedElems) {
       const atomIndicesInBond = getAtomIdsFromClassnames(elem.classList);
@@ -222,3 +210,26 @@ export const buildAtomsHitboxes = async ({
   }
   return clickablePaths;
 };
+
+export interface AttachedSvgIcon {
+  svg: string;
+  atomIds: number[];
+  bondIds: number[];
+}
+
+export interface IconCoords {
+  svg: string;
+  scale: number;
+  placements: IconsPlacements[];
+}
+
+interface IconsPlacements {
+  xTranslate: number;
+  yTranslate: number;
+}
+
+export interface BondIdentifiers {
+  bondId: string;
+  startAtomId: string;
+  endAtomId: string;
+}

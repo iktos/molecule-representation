@@ -1,4 +1,4 @@
-﻿/*
+/*
   MIT License
 
   Copyright (c) 2023 Iktos
@@ -22,12 +22,11 @@
   SOFTWARE.
 */
 
-import React, { CSSProperties, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { CSSProperties, memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { RDKitColor, getMoleculeDetails, isValidSmiles, useRDKit } from '@iktos-oss/rdkit-provider';
 import { ZoomWrapper, DisplayZoomToolbar, DisplayZoomToolbarStrings } from '../Zoom';
 import { Spinner } from '../Spinner';
 import { isEqual } from '../../utils/compare';
-import { createSvgElement } from '../../utils/create-svg-element';
 import {
   ClickableAtoms,
   DrawSmilesSVGProps,
@@ -42,10 +41,10 @@ import {
   getAtomIdxFromClickableId,
   CLICKABLE_MOLECULE_CLASSNAME,
   BondIdentifiers,
-  IconCoords,
   AttachedSvgIcon,
   computeIconsCoords,
   appendSvgIconsToSvg,
+  createSvgElement,
 } from '../../utils';
 
 export type MoleculeRepresentationProps = SmilesRepresentationProps | SmartsRepresentationProps;
@@ -78,24 +77,10 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     ...restOfProps
   }: MoleculeRepresentationProps) => {
     const { worker } = useRDKit();
-    const moleculeRef: React.MutableRefObject<SVGElement | null> = useRef<SVGElement | null>(null);
-    const [isMoleculeRefSet, setIsMoleculeRefSet] = useState(false);
     const [svgContent, setSvgContent] = useState('');
-    const [iconsCoords, setIconsCoords] = useState<IconCoords[]>([]);
     const isClickable = useMemo(() => !!onAtomClick || !!onBondClick, [onAtomClick, onBondClick]);
     const isHoverable = useMemo(() => !!onMouseHover || !!onMouseLeave, [onMouseHover, onMouseLeave]);
     const isClickableOrHoverable = useMemo(() => isClickable || isHoverable, [isClickable, isHoverable]);
-
-    useEffect(() => {
-      // the compute svg icons to add effect
-      if (!attachedSvgIcons || !moleculeRef.current || !isMoleculeRefSet) {
-        return;
-      }
-      computeIconsCoords({
-        parentDiv: moleculeRef.current,
-        attachedIcons: attachedSvgIcons,
-      }).then(setIconsCoords);
-    }, [attachedSvgIcons, isMoleculeRefSet]);
 
     useEffect(() => {
       // the compute svg effect
@@ -144,7 +129,11 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
           svg =
             atomsHitbox.length || bondsHitbox.length ? appendHitboxesToSvg(svg, atomsHitbox, bondsHitbox) ?? svg : svg;
         }
-        if (iconsCoords.length) {
+        if (attachedSvgIcons) {
+          const iconsCoords = await computeIconsCoords({
+            svg,
+            attachedIcons: attachedSvgIcons,
+          });
           svg = appendSvgIconsToSvg(svg, iconsCoords) ?? svg;
         }
         setSvgContent(svg);
@@ -166,10 +155,10 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       worker,
       clickableAtoms,
       alignmentDetails,
-      iconsCoords,
       isClickableOrHoverable,
       heatmapAtomsWeights,
       highlightColor,
+      attachedSvgIcons,
     ]);
 
     const handleOnClick = useCallback(
@@ -223,10 +212,6 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
 
     const svgElement = createSvgElement(svgContent, {
       'data-testid': 'clickable-molecule',
-      ref: (node: SVGElement) => {
-        moleculeRef.current = node;
-        setIsMoleculeRefSet(true);
-      },
       ...restOfProps,
       className: `molecule ${isClickableOrHoverable ? CLICKABLE_MOLECULE_CLASSNAME : ''}`,
       height,
