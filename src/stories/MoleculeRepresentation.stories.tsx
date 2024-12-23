@@ -361,11 +361,14 @@ export const BondsWithCustomStyles = Template.bind({});
 BondsWithCustomStyles.args = {
   moleculeRepresetnationProps: {
     ...PROPS,
-    smiles: 'OOOOOOOOO',
+    smiles: 'OOOOOOOOOOOOOO',
     bondsStyles: {
       default: { stroke: 'green' },
       2: { stroke: 'black', 'stroke-width': '3px' },
       '5-6': { opacity: 0.6, stroke: 'yellow' },
+      '7-*': { 'stroke-width': '3px' },
+      '*-10': { 'stroke-width': '4px' },
+      '10-*': { 'stroke-width': '2px' },
     },
   },
   rdkitProviderProps: RDKitProviderCachingProps,
