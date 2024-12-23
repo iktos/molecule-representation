@@ -248,7 +248,12 @@ export const applyUserStyles = ({
         .filter((c) => c.includes('atom'))
         .map((c) => parseInt(c.replace('atom-', '')));
       const stylesToApply =
-        specificBondsStyles[bondId] || specificBondsStyles[`${startAtomId}-${endAtomId}`] || defaultBondsStyles || {};
+        specificBondsStyles[bondId] ||
+        specificBondsStyles[`${startAtomId}-${endAtomId}`] ||
+        specificBondsStyles[`${startAtomId}-*`] ||
+        specificBondsStyles[`*-${endAtomId}`] ||
+        defaultBondsStyles ||
+        {};
       Object.assign(matchedElem.style, stylesToApply);
     }
   }
@@ -288,5 +293,7 @@ export interface AtomsStyles {
 export interface BondsStyles {
   [bondId: number]: CustomStyles; // style for specific bonds (by bond id)
   [atomIds: `${number}-${number}`]: CustomStyles; // style for bonds identified by atom IDs
+  [atomIds: `${number}-*`]: CustomStyles; // style for bonds identified by atom IDs
+  [atomIds: `*-${number}`]: CustomStyles; // style for bonds identified by atom IDs
   default?: CustomStyles; // default style for all bonds
 }

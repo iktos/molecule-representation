@@ -51,6 +51,9 @@ const props: MoleculeRepresentationProps = {
   bondsStyles: {
     default: { stroke: 'black', 'stroke-width': '1px' },
     '0-1': { stroke: 'green', 'stroke-width': '2px' },
+    '4-*': { 'stroke-width': '3px' },
+    '*-6': { 'stroke-width': '4px' },
+    '6-*': { 'stroke-width': '2px' },
   },
   height: 200,
   width: 300,
