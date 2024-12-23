@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 
-import { BondIdentifiers } from './dom-computation';
+import { BondIdentifiers } from './svg-computation';
 
 export const CLICKABLE_MOLECULE_CLASSNAME = 'clickable-molecule';
 const CLICKABLE_ATOM_ID = 'clickable-atom-';
