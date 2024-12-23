@@ -348,6 +348,47 @@ MoleculeWithAtomsHeatmap.args = {
   rdkitProviderProps: RDKitProviderCachingProps,
 };
 
+export const WithCustomStyles = Template.bind({});
+WithCustomStyles.args = {
+  moleculeRepresetnationProps: {
+    ...PROPS,
+    smiles: 'CC1=C(C(=CC=C1)C)NC(=O)CN2CCN(CC2)CC(COC3=CC=CC=C3OC)O',
+    atomsStyles: {
+      default: { opacity: 0.2 },
+      13: { opacity: 1 },
+      14: { opacity: 1 },
+      15: { opacity: 1 },
+      16: { opacity: 1 },
+      17: { opacity: 1 },
+      18: { opacity: 1 },
+      19: { opacity: 1 },
+      29: { opacity: 1 },
+      30: { opacity: 1 },
+    },
+    bondsStyles: {
+      default: { opacity: 0.2 },
+      '*-13': { opacity: 1 },
+      '*-14': { opacity: 1 },
+      '*-15': { opacity: 1 },
+      '*-16': { opacity: 1 },
+      '*-17': { opacity: 1 },
+      '*-18': { opacity: 1 },
+      '*-19': { opacity: 1 },
+      '*-29': { opacity: 1 },
+      '*-30': { opacity: 1 },
+      '13-*': { opacity: 1 },
+      '14-*': { opacity: 1 },
+      '15-*': { opacity: 1 },
+      '16-*': { opacity: 1 },
+      '17-*': { opacity: 1 },
+      '18-*': { opacity: 1 },
+      '19-*': { opacity: 1 },
+      '29-*': { opacity: 1 },
+      '30-*': { opacity: 1 },
+    },
+  },
+  rdkitProviderProps: RDKitProviderCachingProps,
+};
 export const AtomsWithCustomStyles = Template.bind({});
 AtomsWithCustomStyles.args = {
   moleculeRepresetnationProps: {
