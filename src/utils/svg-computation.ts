@@ -33,6 +33,7 @@ import {
 import {
   getAtomHighliteEllipseIdentifier,
   getAtomIdsFromClassnames,
+  getAtomSelectorIdentifier,
   getBondIdFromClassnames,
   getBondSelectorIdentifier,
   getClickableAtomIdFromAtomIdx,
@@ -50,13 +51,13 @@ export const createSvgElement = (svg: string, svgProps?: Record<string, unknown>
   return cloneElement(element as React.ReactElement, { ...svgProps });
 };
 
-export const computeIconsCoords = async ({
+export const computeIconsCoords = ({
   svg,
   attachedIcons,
 }: {
   svg: string;
   attachedIcons: AttachedSvgIcon[];
-}): Promise<IconCoords[]> => {
+}): IconCoords[] => {
   if (!svg) return [];
   const coords: IconCoords[] = [];
   const parentWrapper = document.createElement('div');
@@ -126,7 +127,7 @@ export const computeIconsCoords = async ({
   return coords;
 };
 
-export const buildBondsHitboxes = async ({
+export const buildBondsHitboxes = ({
   // this doesn't look into dom, but uses the svg string instead
   numAtoms,
   svg,
@@ -135,7 +136,7 @@ export const buildBondsHitboxes = async ({
   numAtoms: number;
   svg: string;
   isClickable: boolean;
-}): Promise<SVGPathElement[]> => {
+}): SVGPathElement[] => {
   const parentWrapper = document.createElement('div');
   parentWrapper.innerHTML = svg;
   const parentSvg = parentWrapper.getElementsByTagName('svg')[0];
@@ -167,7 +168,7 @@ export const buildBondsHitboxes = async ({
   }
   return clickablePaths;
 };
-export const buildAtomsHitboxes = async ({
+export const buildAtomsHitboxes = ({
   // this doesn't look into dom, but uses the svg string instead
   numAtoms,
   svg,
@@ -178,7 +179,7 @@ export const buildAtomsHitboxes = async ({
   svg: string;
   clickableAtoms: Set<number> | null;
   isClickable: boolean;
-}): Promise<SVGEllipseElement[]> => {
+}): SVGEllipseElement[] => {
   const parentWrapper = document.createElement('div');
   parentWrapper.innerHTML = svg;
   const parentSvg = parentWrapper.getElementsByTagName('svg')[0];
@@ -211,6 +212,50 @@ export const buildAtomsHitboxes = async ({
   return clickablePaths;
 };
 
+export const applyUserStyles = ({
+  svg,
+  numAtoms,
+  atomsStyles,
+  bondsStyles,
+}: {
+  svg: string;
+  numAtoms: number;
+  atomsStyles: AtomsStyles | undefined;
+  bondsStyles: BondsStyles | undefined;
+}): string => {
+  if (!atomsStyles && !bondsStyles) return svg;
+  const parentWrapper = document.createElement('div');
+  parentWrapper.innerHTML = svg;
+  const parentSvg = parentWrapper.getElementsByTagName('svg')[0];
+  if (!parentSvg) return svg;
+
+  const { default: defaultAtomsStyles, ...specificAtomsStyles } = atomsStyles || {};
+  const { default: defaultBondsStyles, ...specificBondsStyles } = bondsStyles || {};
+  for (let atomIdx = 0; atomIdx < numAtoms; atomIdx++) {
+    const matchedAtomsElems = Array.from(
+      parentSvg.querySelectorAll(getAtomSelectorIdentifier(atomIdx)),
+    ) as SVGPathElement[];
+    const matchedBondsElems = Array.from(
+      parentSvg.querySelectorAll(getBondSelectorIdentifier(atomIdx)),
+    ) as SVGPathElement[];
+    for (const matchedElem of matchedAtomsElems) {
+      const stylesToApply = specificAtomsStyles[atomIdx] || defaultAtomsStyles || {};
+      Object.assign(matchedElem.style, stylesToApply);
+    }
+    for (const matchedElem of matchedBondsElems) {
+      const [bondId] = getBondIdFromClassnames(matchedElem.classList);
+      const [startAtomId, endAtomId] = Array.from(matchedElem.classList)
+        .filter((c) => c.includes('atom'))
+        .map((c) => parseInt(c.replace('atom-', '')));
+      const stylesToApply =
+        specificBondsStyles[bondId] || specificBondsStyles[`${startAtomId}-${endAtomId}`] || defaultBondsStyles || {};
+      Object.assign(matchedElem.style, stylesToApply);
+    }
+  }
+
+  return parentWrapper.innerHTML;
+};
+
 export interface AttachedSvgIcon {
   svg: string;
   atomIds: number[];
@@ -232,4 +277,16 @@ export interface BondIdentifiers {
   bondId: string;
   startAtomId: string;
   endAtomId: string;
+}
+
+type CustomStyles = Record<string, string | number>;
+export interface AtomsStyles {
+  [atomId: number]: CustomStyles; // style for specific atoms
+  default?: CustomStyles; // default style for all atoms
+}
+
+export interface BondsStyles {
+  [bondId: number]: CustomStyles; // style for specific bonds (by bond id)
+  [atomIds: `${number}-${number}`]: CustomStyles; // style for bonds identified by atom IDs
+  default?: CustomStyles; // default style for all bonds
 }

@@ -63,5 +63,6 @@ export const getBondIdFromClassnames = (bondClassnames: DOMTokenList) =>
     .map(parseFloat);
 
 // selectors
+export const getAtomSelectorIdentifier = (atomIdx: number) => `path.atom-${atomIdx}:not([class*=" "])`; // space in the class attribute indicate multiple classes, so only returns
 export const getBondSelectorIdentifier = (atomIdx: number) => `.atom-${atomIdx}[class*="bond"]`;
 export const getAtomHighliteEllipseIdentifier = (atomIdx: number) => `ellipse.atom-${atomIdx}`;

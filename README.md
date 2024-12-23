@@ -44,6 +44,14 @@ const props: MoleculeRepresentationProps = {
     [1, 0],
     [3, 4],
   ],
+  atomsStyles: {
+    default: { fill: 'green' },
+    1: { fill: 'red' },
+  },
+  bondsStyles: {
+    default: { stroke: 'black', 'stroke-width': '1px' },
+    '0-1': { stroke: 'green', 'stroke-width': '2px' },
+  },
   height: 200,
   width: 300,
   onAtomClick: (atomId: string) => console.log("clicked atoms idx:", atomId),

@@ -1,4 +1,4 @@
-/*
+﻿/*
   MIT License
 
   Copyright (c) 2023 Iktos
@@ -45,6 +45,9 @@ import {
   computeIconsCoords,
   appendSvgIconsToSvg,
   createSvgElement,
+  AtomsStyles,
+  BondsStyles,
+  applyUserStyles,
 } from '../../utils';
 
 export type MoleculeRepresentationProps = SmilesRepresentationProps | SmartsRepresentationProps;
@@ -74,6 +77,8 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     zoomable = false,
     displayZoomToolbar = DisplayZoomToolbar.ON_HOVER,
     heatmapAtomsWeights,
+    atomsStyles,
+    bondsStyles,
     ...restOfProps
   }: MoleculeRepresentationProps) => {
     const { worker } = useRDKit();
@@ -108,20 +113,25 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
             ? await get_svg_from_smarts({ smarts, width, height }, worker)
             : await get_svg(drawingDetails, worker);
         if (!svg) return;
+        const moleculeDetails = await getMoleculeDetails(worker, {
+          smiles: structureToDraw,
+          returnFullDetails: true,
+        });
+        if (!moleculeDetails) return;
+        svg = applyUserStyles({
+          svg,
+          numAtoms: moleculeDetails.NumHeavyAtoms,
+          atomsStyles,
+          bondsStyles,
+        });
         if (isClickableOrHoverable) {
-          const moleculeDetails = await getMoleculeDetails(worker, {
-            smiles: structureToDraw,
-            returnFullDetails: true,
-          });
-          if (!moleculeDetails) return;
-
-          const atomsHitbox = await buildAtomsHitboxes({
+          const atomsHitbox = buildAtomsHitboxes({
             numAtoms: moleculeDetails.NumHeavyAtoms,
             svg,
             clickableAtoms: clickableAtoms?.clickableAtomsIds ? new Set(clickableAtoms.clickableAtomsIds) : null,
             isClickable: !!onAtomClick,
           });
-          const bondsHitbox = await buildBondsHitboxes({
+          const bondsHitbox = buildBondsHitboxes({
             numAtoms: moleculeDetails.NumHeavyAtoms,
             svg,
             isClickable: !!onBondClick,
@@ -130,7 +140,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
             atomsHitbox.length || bondsHitbox.length ? appendHitboxesToSvg(svg, atomsHitbox, bondsHitbox) ?? svg : svg;
         }
         if (attachedSvgIcons) {
-          const iconsCoords = await computeIconsCoords({
+          const iconsCoords = computeIconsCoords({
             svg,
             attachedIcons: attachedSvgIcons,
           });
@@ -159,6 +169,8 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       heatmapAtomsWeights,
       highlightColor,
       attachedSvgIcons,
+      atomsStyles,
+      bondsStyles,
     ]);
 
     const handleOnClick = useCallback(
@@ -263,6 +275,8 @@ interface MoleculeRepresentationBaseProps {
   zoomable?: boolean;
   displayZoomToolbar?: DisplayZoomToolbarStrings;
   heatmapAtomsWeights?: Record<number, number>;
+  atomsStyles?: AtomsStyles;
+  bondsStyles?: BondsStyles;
 }
 
 interface SmilesRepresentationProps extends MoleculeRepresentationBaseProps {

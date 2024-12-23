@@ -348,6 +348,29 @@ MoleculeWithAtomsHeatmap.args = {
   rdkitProviderProps: RDKitProviderCachingProps,
 };
 
+export const AtomsWithCustomStyles = Template.bind({});
+AtomsWithCustomStyles.args = {
+  moleculeRepresetnationProps: {
+    ...PROPS,
+    smiles: 'OOOOOOOOO',
+    atomsStyles: { default: { fill: 'green', opacity: 0.5 }, 2: { fill: 'yellow' } },
+  },
+  rdkitProviderProps: RDKitProviderCachingProps,
+};
+export const BondsWithCustomStyles = Template.bind({});
+BondsWithCustomStyles.args = {
+  moleculeRepresetnationProps: {
+    ...PROPS,
+    smiles: 'OOOOOOOOO',
+    bondsStyles: {
+      default: { stroke: 'green' },
+      2: { stroke: 'black', 'stroke-width': '3px' },
+      '5-6': { opacity: 0.6, stroke: 'yellow' },
+    },
+  },
+  rdkitProviderProps: RDKitProviderCachingProps,
+};
+
 export const AtomsWithCustomSVGIcons = Template.bind({});
 AtomsWithCustomSVGIcons.args = {
   moleculeRepresetnationProps: {
