@@ -113,6 +113,16 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
       drawingDetails: rdkitDrawingOptions,
       alignmentDetails,
     });
+    if (!svg && !!alignmentDetails) {
+      console.error(
+        '@iktos-oss/molecule-representation: failed to draw molecule, falling back to no alignment drawing',
+      );
+      const { svg: svgRetryWithNoAlignment } = await getSvg(worker, {
+        smiles: canonicalSmiles,
+        drawingDetails: rdkitDrawingOptions,
+      });
+      return svgRetryWithNoAlignment;
+    }
     return svg;
   } catch (error) {
     console.error(error);
