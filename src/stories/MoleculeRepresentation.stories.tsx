@@ -448,7 +448,7 @@ export const FromSmarts = Template.bind({});
 FromSmarts.args = {
   moleculeRepresetnationProps: {
     ...PROPS,
-    smarts: '[#6][CH1](=O)',
+    smarts: '[Br,Cl,I][C&X4;C&H1,C&H2]',
     smiles: undefined,
     alignmentDetails: undefined,
   },
