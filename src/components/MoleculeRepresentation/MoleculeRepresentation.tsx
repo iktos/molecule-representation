@@ -91,10 +91,10 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       // the compute svg effect
       if (!worker) return;
       const computeSvg = async () => {
-        const structureToDraw = smarts || smiles;
+        const structureToDraw = (smarts || smiles) as string;
         if (!structureToDraw) return;
         const drawingDetails: DrawSmilesSVGProps = {
-          smiles: (smarts || smiles) as string,
+          smiles: structureToDraw,
           width,
           height,
           details: { ...details, addAtomIndices },
@@ -113,6 +113,13 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
             ? await get_svg_from_smarts({ smarts, width, height }, worker)
             : await get_svg(drawingDetails, worker);
         if (!svg) return;
+        if (smarts) {
+          // effects are not yet supported for smarts, only compute/add effects for smiles
+          setSvgContent(svg);
+          return;
+        }
+
+        // add effects to svg
         const moleculeDetails = await getMoleculeDetails(worker, {
           smiles: structureToDraw,
           returnFullDetails: true,
