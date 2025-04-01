@@ -73,6 +73,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     style,
     showLoadingSpinner = false,
     showSmartsAsSmiles = false,
+    canonicalize = false,
     width,
     zoomable = false,
     displayZoomToolbar = DisplayZoomToolbar.ON_HOVER,
@@ -105,6 +106,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
           heatmapAtomsWeights,
           isClickable,
           clickableAtoms,
+          canonicalize,
         };
         const isSmartsAValidSmiles =
           showSmartsAsSmiles && !!smarts && (await isValidSmiles(worker, { smiles: smarts })).isValid;
@@ -144,7 +146,9 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
             isClickable: !!onBondClick,
           });
           svg =
-            atomsHitbox.length || bondsHitbox.length ? appendHitboxesToSvg(svg, atomsHitbox, bondsHitbox) ?? svg : svg;
+            atomsHitbox.length || bondsHitbox.length
+              ? (appendHitboxesToSvg(svg, atomsHitbox, bondsHitbox) ?? svg)
+              : svg;
         }
         if (attachedSvgIcons) {
           const iconsCoords = computeIconsCoords({
@@ -178,6 +182,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       attachedSvgIcons,
       atomsStyles,
       bondsStyles,
+      canonicalize,
     ]);
 
     const handleOnClick = useCallback(
@@ -284,6 +289,7 @@ interface MoleculeRepresentationBaseProps {
   heatmapAtomsWeights?: Record<number, number>;
   atomsStyles?: AtomsStyles;
   bondsStyles?: BondsStyles;
+  canonicalize?: boolean;
 }
 
 interface SmilesRepresentationProps extends MoleculeRepresentationBaseProps {

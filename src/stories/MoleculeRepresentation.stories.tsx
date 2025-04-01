@@ -439,7 +439,19 @@ export const WithIndices = Template.bind({});
 WithIndices.args = {
   moleculeRepresetnationProps: {
     ...PROPS,
+    smiles: 'N1C=NC2C(N)=NC=NC1=2',
     addAtomIndices: true,
+  },
+  rdkitProviderProps: RDKitProviderCachingProps,
+};
+
+export const CanonicalWithIndices = Template.bind({});
+CanonicalWithIndices.args = {
+  moleculeRepresetnationProps: {
+    ...PROPS,
+    smiles: 'N1C=NC2C(N)=NC=NC1=2',
+    addAtomIndices: true,
+    canonicalize: true,
   },
   rdkitProviderProps: RDKitProviderCachingProps,
 };
