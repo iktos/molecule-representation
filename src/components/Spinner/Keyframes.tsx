@@ -48,8 +48,8 @@ export const Keyframes = (props: IProps) => {
             return ['from', 'to'].includes(key)
               ? `${key} { ${toCss(props[key])} }`
               : /^_[0-9]+$/.test(key)
-              ? `${key.replace('_', '')}% { ${toCss(props[key])} }`
-              : '';
+                ? `${key.replace('_', '')}% { ${toCss(props[key])} }`
+                : '';
           })
           .join(' ')}
       }`}

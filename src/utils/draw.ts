@@ -35,10 +35,15 @@ import { HIGHLIGHT_RDKIT_COLORS, TRANSPARANT_RDKIT_COLOR } from '../constants';
 
 export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
   if (!params.smiles) return null;
-  const { canonicalForm: canonicalSmiles } = await getCanonicalFormForStructure(worker, {
-    structure: params.smiles,
-  });
-  if (!canonicalSmiles) return null;
+  let smiles = params.smiles;
+
+  if (params.canonicalize) {
+    const { canonicalForm: canonicalSmiles } = await getCanonicalFormForStructure(worker, {
+      structure: params.smiles,
+    });
+    if (!canonicalSmiles) return null;
+    smiles = canonicalSmiles;
+  }
 
   const {
     width,
@@ -53,7 +58,7 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
   } = params;
   const highlightBondColors = getHighlightColors(bondsToHighlight, highlightColor);
   const highlightAtomColors = getHighlightColors(atomsToHighlight, highlightColor);
-  const moleculeDetails = await getMoleculeDetails(worker, { smiles: canonicalSmiles, returnFullDetails: true });
+  const moleculeDetails = await getMoleculeDetails(worker, { smiles, returnFullDetails: true });
   if (moleculeDetails) {
     setHighlightColorForClickableMolecule({
       nbAtoms: moleculeDetails.NumHeavyAtoms,
@@ -88,7 +93,7 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
   try {
     if (alignmentDetails) {
       await addAlignmentFromMolBlock({
-        smiles: canonicalSmiles,
+        smiles,
         alignmentDetails,
         highlightAtomColors,
         atomsToDrawWithHighlight,
@@ -109,7 +114,7 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
       ...details, // user custom rdkit drawning params
     };
     const { svg } = await getSvg(worker, {
-      smiles: canonicalSmiles,
+      smiles,
       drawingDetails: rdkitDrawingOptions,
       alignmentDetails,
     });
@@ -118,7 +123,7 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
         '@iktos-oss/molecule-representation: failed to draw molecule, falling back to no alignment drawing',
       );
       const { svg: svgRetryWithNoAlignment } = await getSvg(worker, {
-        smiles: canonicalSmiles,
+        smiles,
         drawingDetails: rdkitDrawingOptions,
       });
       return svgRetryWithNoAlignment;
@@ -276,6 +281,7 @@ export interface DrawSmilesSVGProps {
   bondsToHighlight?: number[][];
   isClickable?: boolean;
   clickableAtoms?: ClickableAtoms;
+  canonicalize?: boolean;
 }
 
 export interface ClickableAtoms {
