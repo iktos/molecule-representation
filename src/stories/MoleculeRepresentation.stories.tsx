@@ -36,6 +36,7 @@ import { CCO_MOL_BLOCK, SMILES_TO_ALIGN_CCO_AGAINST } from './fixtures/molblock'
 import { RDKitProviderProps } from '@iktos-oss/rdkit-provider';
 import { BondIdentifiers } from '../utils';
 import Popup from './fixtures/Popup';
+import { copySvgToClipboard, downloadSvgAsPng } from './fixtures/helpers';
 
 export default {
   title: 'components/molecules/MoleculeRepresentation',
@@ -313,6 +314,93 @@ CoordgenPreferred.args = {
   moleculeRepresetnationProps: PROPS,
   rdkitProviderProps: { ...RDKitProviderCachingProps, preferCoordgen: true },
 };
+
+const TemplateCopyWithClick: Story<MoleculeRepresentationProps> = (args) => {
+  const handleWrapperClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const wrapperDiv = event.currentTarget;
+    const svgElement = wrapperDiv.querySelector('svg');
+    if (svgElement) {
+      copySvgToClipboard(svgElement);
+    } else {
+      console.error('Could not find SVG element to copy.');
+      alert('Could not find the molecule SVG element to copy.');
+    }
+  };
+
+  return (
+    <RDKitProvider {...RDKitProviderCachingProps}>
+      <div
+        onClick={handleWrapperClick}
+        style={{
+          cursor: 'pointer',
+          border: '2px dashed #007bff',
+          display: 'inline-block',
+          padding: '5px',
+          borderRadius: '4px',
+        }}
+        title='Click to copy molecule image to clipboard'
+      >
+        <MoleculeRepresentation {...args} />
+      </div>
+      <p style={{ marginTop: '10px', fontSize: '0.9em', color: '#555' }}>
+        Click the molecule above to copy its image to the clipboard (as PNG).
+      </p>
+    </RDKitProvider>
+  );
+};
+
+export const CopySvgOnClick = TemplateCopyWithClick.bind({});
+CopySvgOnClick.args = {
+  ...PROPS,
+  smiles: 'O=C(C)Oc1ccccc1C(=O)O',
+  width: 250,
+  height: 180,
+};
+CopySvgOnClick.storyName = 'Copy Image on Click';
+
+const TemplateDownloadOnClick: Story<MoleculeRepresentationProps> = (args) => {
+  const handleWrapperClickForDownload = (event: React.MouseEvent<HTMLDivElement>) => {
+    const wrapperDiv = event.currentTarget;
+    const svgElement = wrapperDiv.querySelector('svg');
+    if (svgElement) {
+      const safeFilename = (args.smiles || 'molecule').replace(/[^a-zA-Z0-9()]/g, '_').slice(0, 50) + '.png';
+
+      downloadSvgAsPng(svgElement, safeFilename);
+    } else {
+      console.error('Could not find SVG element to download.');
+      alert('Could not find the molecule SVG element to download.');
+    }
+  };
+
+  return (
+    <RDKitProvider {...RDKitProviderCachingProps}>
+      <div
+        onClick={handleWrapperClickForDownload}
+        style={{
+          cursor: 'pointer',
+          border: '2px dashed #28a745',
+          display: 'inline-block',
+          padding: '5px',
+          borderRadius: '4px',
+        }}
+        title='Click to download molecule image as PNG'
+      >
+        <MoleculeRepresentation {...args} />
+      </div>
+      <p style={{ marginTop: '10px', fontSize: '0.9em', color: '#555' }}>
+        Click the molecule above to download its image as a PNG file.
+      </p>
+    </RDKitProvider>
+  );
+};
+export const DownloadPngOnClick = TemplateDownloadOnClick.bind({});
+DownloadPngOnClick.args = {
+  ...PROPS,
+  smiles: 'c1cc(C(=O)O)c(OC(=O)C)cc1',
+  width: 250,
+  height: 180,
+};
+DownloadPngOnClick.storyName = 'Download Image on Click';
 
 export const HighlightedAtoms = Template.bind({});
 HighlightedAtoms.args = {
