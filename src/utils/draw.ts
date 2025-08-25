@@ -135,7 +135,7 @@ export const get_svg = async (params: DrawSmilesSVGProps, worker: Worker) => {
   }
 };
 
-export const get_svg_from_smarts = async (params: DrawSmartsSVGProps, worker: Worker) => {
+export const get_svg_from_smarts = async (params: DrawSmartsSVGProps, drawAsSmiles = false, worker: Worker) => {
   if (!worker) return null;
   if (!params.smarts) return null;
 
@@ -146,6 +146,13 @@ export const get_svg_from_smarts = async (params: DrawSmartsSVGProps, worker: Wo
 
   if (!canonicalSmarts) return null;
 
+  if (drawAsSmiles) {
+    const { svg } = await getSvg(worker, {
+      ...params,
+      smiles: canonicalSmarts,
+    });
+    return svg;
+  }
   const { svg } = await getSvgFromSmarts(worker, {
     ...params,
     smarts: canonicalSmarts,

@@ -110,10 +110,9 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
         };
         const isSmartsAValidSmiles =
           showSmartsAsSmiles && !!smarts && (await isValidSmiles(worker, { smiles: smarts })).isValid;
-        let svg =
-          smarts && !isSmartsAValidSmiles
-            ? await get_svg_from_smarts({ smarts, width, height }, worker)
-            : await get_svg(drawingDetails, worker);
+        let svg = smarts
+          ? await get_svg_from_smarts({ smarts, width, height }, isSmartsAValidSmiles, worker)
+          : await get_svg(drawingDetails, worker);
         if (!svg) return;
         if (smarts) {
           // effects are not yet supported for smarts, only compute/add effects for smiles
