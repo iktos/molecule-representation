@@ -73,16 +73,35 @@ const Template: Story<{
 
 const TemplateOfListOfMoleculesRepresentations: Story<{
   listOfSmiles: string[];
+  listOfSmarts?: string[];
   listOfProps: MoleculeRepresentationProps[];
-}> = ({ listOfSmiles, listOfProps }: { listOfSmiles: string[]; listOfProps: MoleculeRepresentationProps[] }) => (
+}> = ({
+  listOfSmiles,
+  listOfSmarts,
+  listOfProps,
+}: {
+  listOfSmiles: string[];
+  listOfSmarts?: string[];
+  listOfProps: MoleculeRepresentationProps[];
+}) => (
   <RDKitProvider {...RDKitProviderCachingProps}>
     <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-      {listOfSmiles.map((smiles, idx) => (
-        // eslint-disable-next-line react/jsx-key
-        <div style={{ width: '25%' }}>
-          <MoleculeRepresentation {...listOfProps[idx]} smiles={smiles} smarts={undefined} />
-        </div>
-      ))}
+      {listOfSmarts && listOfSmarts.length > 0
+        ? listOfSmarts.map((smarts, idx) => (
+            <div key={`smarts-${idx}`} style={{ width: '25%' }}>
+              <MoleculeRepresentation
+                {...listOfProps[idx]}
+                alignmentDetails={undefined}
+                smiles={undefined}
+                smarts={smarts}
+              />
+            </div>
+          ))
+        : listOfSmiles.map((smiles, idx) => (
+            <div key={`smiles-${idx}`} style={{ width: '25%' }}>
+              <MoleculeRepresentation {...listOfProps[idx]} smiles={smiles} smarts={undefined} />
+            </div>
+          ))}
     </div>
   </RDKitProvider>
 );
@@ -566,16 +585,14 @@ FromSmartsWithExplicitHydronges.args = {
   rdkitProviderProps: { removeHs: false },
 };
 
-export const DrawSmartsAsSmiles = Template.bind({});
+export const DrawSmartsAsSmiles = TemplateOfListOfMoleculesRepresentations.bind({});
 DrawSmartsAsSmiles.args = {
-  moleculeRepresetnationProps: {
-    ...PROPS,
-    smarts: '*1*=C*=*N=1',
-    showSmartsAsSmiles: true,
-    smiles: undefined,
-    alignmentDetails: undefined,
-  },
-  rdkitProviderProps: RDKitProviderCachingProps,
+  listOfSmiles: [],
+  listOfSmarts: ['[#6][CH1](=O)', '*1*=C*=*N=1'],
+  listOfProps: [
+    { ...PROPS, showSmartsAsSmiles: true, alignmentDetails: undefined },
+    { ...PROPS, showSmartsAsSmiles: true, alignmentDetails: undefined },
+  ],
 };
 
 export const Zoomable = Template.bind({});

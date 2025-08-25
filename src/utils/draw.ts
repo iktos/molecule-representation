@@ -143,13 +143,12 @@ export const get_svg_from_smarts = async (params: DrawSmartsSVGProps, drawAsSmil
     structure: params.smarts,
     useQMol: true,
   });
-
   if (!canonicalSmarts) return null;
 
   if (drawAsSmiles) {
     const { svg } = await getSvg(worker, {
       ...params,
-      smiles: canonicalSmarts,
+      smiles: params.smarts,
     });
     return svg;
   }
