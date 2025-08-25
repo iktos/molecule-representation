@@ -570,7 +570,7 @@ export const DrawSmartsAsSmiles = Template.bind({});
 DrawSmartsAsSmiles.args = {
   moleculeRepresetnationProps: {
     ...PROPS,
-    smarts: '[#6][CH1](=O)',
+    smarts: '*1*=C*=*N=1',
     showSmartsAsSmiles: true,
     smiles: undefined,
     alignmentDetails: undefined,
