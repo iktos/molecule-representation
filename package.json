@@ -1,6 +1,6 @@
 {
   "name": "@iktos-oss/molecule-representation",
-  "version": "1.12.2",
+  "version": "1.12.3",
   "description": "exports interactif molecule represnetations as react components",
   "main": "lib/cjs/index.js",
   "module": "lib/esm/index.js",
@@ -45,7 +45,7 @@
   "author": "Ramzi Oueslati <ramzi.oueslati@iktos.com>",
   "devDependencies": {
     "@babel/core": "^7.20.12",
-    "@rdkit/rdkit": "^2024.3.5-1.0.0",
+    "@rdkit/rdkit": "^2025.3.2-1.0.0",
     "@iktos-oss/rdkit-provider": "^2.9.2",
     "@storybook/addon-actions": "^6.5.16",
     "@storybook/addon-essentials": "^6.5.16",

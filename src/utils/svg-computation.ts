@@ -39,6 +39,8 @@ import {
   getClickableAtomIdFromAtomIdx,
   getClickableBondId,
   isHighlightingPath,
+  RDKIT_ATOMS_CLASS_REGEX,
+  RDKIT_HIGHLIGHTED_ELIPSES_IDENTIFIER,
 } from './identifiers';
 
 export const createSvgElement = (svg: string, svgProps?: Record<string, unknown>) => {
@@ -259,6 +261,57 @@ export const applyUserStyles = ({
   }
 
   return parentWrapper.innerHTML;
+};
+
+export const appendEllipsesToSvg = (mainSvg: string, ellipsesSourceSvg: string | null): string => {
+  if (!ellipsesSourceSvg || !mainSvg) {
+    return mainSvg;
+  }
+
+  try {
+    const mainParser = document.createElement('div');
+    mainParser.innerHTML = mainSvg;
+    const existingAtomIndexes = new Set<string>();
+
+    const mainEllipses = mainParser.querySelectorAll<SVGEllipseElement>(RDKIT_HIGHLIGHTED_ELIPSES_IDENTIFIER);
+
+    // collect already present clickable atoms from main svg
+    mainEllipses.forEach((el) => {
+      const classString = el.className.baseVal;
+      const match = classString.match(RDKIT_ATOMS_CLASS_REGEX);
+      if (match && match[1]) {
+        existingAtomIndexes.add(match[1]);
+      }
+    });
+
+    // collect only the ellipses for atoms not already present from ellipses svg
+    const sourceParser = document.createElement('div');
+    sourceParser.innerHTML = ellipsesSourceSvg;
+    const sourceEllipses = sourceParser.querySelectorAll<SVGEllipseElement>(RDKIT_HIGHLIGHTED_ELIPSES_IDENTIFIER);
+
+    const ellipsesToAdd: string[] = [];
+    sourceEllipses.forEach((el) => {
+      const classString = el.className.baseVal;
+      const match = classString.match(RDKIT_ATOMS_CLASS_REGEX);
+      if (match && match[1] && !existingAtomIndexes.has(match[1])) {
+        ellipsesToAdd.push(el.outerHTML);
+      }
+    });
+
+    // if there are new, unique ellipses to add, append them to the main svg
+    if (ellipsesToAdd.length > 0) {
+      const ellipsesString = ellipsesToAdd.join('');
+      const closingSvgTagIndex = mainSvg.lastIndexOf('</svg>');
+      if (closingSvgTagIndex !== -1) {
+        return mainSvg.substring(0, closingSvgTagIndex) + ellipsesString + mainSvg.substring(closingSvgTagIndex);
+      }
+    }
+  } catch (error) {
+    console.error('Error processing and de-duplicating clickableSvg ellipses:', error);
+    return mainSvg;
+  }
+
+  return mainSvg; // return original if no new ellipses were found
 };
 
 export interface AttachedSvgIcon {
