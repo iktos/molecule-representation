@@ -150,8 +150,12 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
               : svg;
         }
         if (attachedSvgIcons) {
+          const svgWithEllipsesToUseForIconScale = await get_svg(
+            { ...drawingDetails, generateClickableHotspots: true },
+            worker,
+          );
           const iconsCoords = computeIconsCoords({
-            svg,
+            svg: svgWithEllipsesToUseForIconScale ?? svg,
             attachedIcons: attachedSvgIcons,
           });
           svg = appendSvgIconsToSvg(svg, iconsCoords) ?? svg;
