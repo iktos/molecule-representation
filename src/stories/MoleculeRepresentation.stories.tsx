@@ -574,6 +574,16 @@ FromSmarts.args = {
   rdkitProviderProps: RDKitProviderCachingProps,
 };
 
+export const KekulizeDisabled = Template.bind({});
+KekulizeDisabled.args = {
+  moleculeRepresetnationProps: {
+    ...PROPS,
+    smiles: 'c1nc2ccc(C(=O)[O-])cc2n1',
+    alignmentDetails: undefined,
+  },
+  rdkitProviderProps: { ...RDKitProviderCachingProps, kekulize: false },
+};
+
 export const FromSmartsWithExplicitHydronges = Template.bind({});
 FromSmartsWithExplicitHydronges.args = {
   moleculeRepresetnationProps: {
