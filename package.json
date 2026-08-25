@@ -1,6 +1,6 @@
 {
   "name": "@iktos-oss/molecule-representation",
-  "version": "1.12.3",
+  "version": "1.13.0-beta.0",
   "description": "exports interactif molecule represnetations as react components",
   "main": "lib/cjs/index.js",
   "module": "lib/esm/index.js",
@@ -46,7 +46,7 @@
   "devDependencies": {
     "@babel/core": "^7.20.12",
     "@rdkit/rdkit": "^2025.3.2-1.0.0",
-    "@iktos-oss/rdkit-provider": "^2.10.2",
+    "@iktos-oss/rdkit-provider": "^2.11.0-beta.0",
     "@storybook/addon-actions": "^6.5.16",
     "@storybook/addon-essentials": "^6.5.16",
     "@storybook/addon-interactions": "^6.5.16",
@@ -81,7 +81,7 @@
     "node-fetch": "^3.3.2"
   },
   "peerDependencies": {
-    "@iktos-oss/rdkit-provider": ">=2.10.2",
+    "@iktos-oss/rdkit-provider": "^2.11.0-beta.0",
     "react": ">=17.0.2",
     "react-dom": ">=17.0.2"
   },

@@ -605,6 +605,18 @@ DrawSmartsAsSmiles.args = {
   ],
 };
 
+export const DrawSmartsWithExplicitHs = TemplateOfListOfMoleculesRepresentations.bind({});
+DrawSmartsWithExplicitHs.args = {
+  listOfSmiles: [],
+  listOfSmarts: ['[H]c1ccccc1', '[H]c1ccccc1', '[H]C(F)(F)F'],
+  listOfProps: [
+    // removeHs defaults to what RDKitProvider was given, so the explicit H is dropped here
+    { ...PROPS, showSmartsAsSmiles: true, alignmentDetails: undefined },
+    { ...PROPS, showSmartsAsSmiles: true, alignmentDetails: undefined, removeHs: false },
+    { ...PROPS, showSmartsAsSmiles: true, alignmentDetails: undefined, removeHs: false },
+  ],
+};
+
 export const Zoomable = Template.bind({});
 Zoomable.args = {
   moleculeRepresetnationProps: {
