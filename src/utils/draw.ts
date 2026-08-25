@@ -57,6 +57,7 @@ export const get_svg = async (props: DrawSmilesSVGProps, worker: Worker): Promis
     heatmapAtomsWeights = {},
     highlightColor,
     canonicalize,
+    removeHs,
     generateClickableHotspots = false,
   } = props;
 
@@ -64,7 +65,7 @@ export const get_svg = async (props: DrawSmilesSVGProps, worker: Worker): Promis
 
   let smiles = initialSmiles;
   if (canonicalize) {
-    const { canonicalForm } = await getCanonicalFormForStructure(worker, { structure: initialSmiles });
+    const { canonicalForm } = await getCanonicalFormForStructure(worker, { structure: initialSmiles, removeHs });
     if (!canonicalForm) return null;
     smiles = canonicalForm;
   }
@@ -128,6 +129,7 @@ export const get_svg = async (props: DrawSmilesSVGProps, worker: Worker): Promis
       smiles,
       drawingDetails: rdkitDrawingOptions,
       alignmentDetails,
+      removeHs,
     });
 
     if (svg && clickableSvg) {
@@ -136,7 +138,7 @@ export const get_svg = async (props: DrawSmilesSVGProps, worker: Worker): Promis
 
     if (!svg && alignmentDetails) {
       console.error('@iktos-oss/molecule-representation: Failed to draw with alignment, falling back to no alignment.');
-      const { svg: svgRetry } = await getSvg(worker, { smiles, drawingDetails: rdkitDrawingOptions });
+      const { svg: svgRetry } = await getSvg(worker, { smiles, drawingDetails: rdkitDrawingOptions, removeHs });
       return svgRetry;
     }
 
@@ -164,6 +166,8 @@ export const get_svg_from_smarts = async (
     const { svg } = await getSvg(worker, {
       ...props,
       smiles: props.smarts,
+      drawingDetails: { ...DEFAULT_DRAWING_DETAILS, width: props.width, height: props.height },
+      removeHs: props.removeHs,
     });
     return svg;
   }
@@ -275,6 +279,7 @@ export interface DrawSmilesSVGProps {
   isClickable?: boolean;
   clickableAtoms?: ClickableAtoms;
   canonicalize?: boolean;
+  removeHs?: boolean;
   generateClickableHotspots?: boolean;
 }
 
@@ -287,6 +292,7 @@ interface DrawSmartsSVGProps {
   smarts: string;
   width: number;
   height: number;
+  removeHs?: boolean;
 }
 
 type HighlightColors = Record<number, RDKitColor>;

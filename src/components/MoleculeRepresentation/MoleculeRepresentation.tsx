@@ -74,6 +74,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
     showLoadingSpinner = false,
     showSmartsAsSmiles = false,
     canonicalize = false,
+    removeHs,
     width,
     zoomable = false,
     displayZoomToolbar = DisplayZoomToolbar.ON_HOVER,
@@ -107,11 +108,12 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
           isClickable,
           clickableAtoms,
           canonicalize,
+          removeHs,
         };
         const isSmartsAValidSmiles =
           showSmartsAsSmiles && !!smarts && (await isValidSmiles(worker, { smiles: smarts })).isValid;
         let svg = smarts
-          ? await get_svg_from_smarts({ smarts, width, height }, isSmartsAValidSmiles, worker)
+          ? await get_svg_from_smarts({ smarts, width, height, removeHs }, isSmartsAValidSmiles, worker)
           : await get_svg(drawingDetails, worker);
         if (!svg) return;
         if (smarts) {
@@ -186,6 +188,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
       atomsStyles,
       bondsStyles,
       canonicalize,
+      removeHs,
     ]);
 
     const handleOnClick = useCallback(
@@ -293,6 +296,7 @@ interface MoleculeRepresentationBaseProps {
   atomsStyles?: AtomsStyles;
   bondsStyles?: BondsStyles;
   canonicalize?: boolean;
+  removeHs?: boolean; // default is what RdkitProvider sets
 }
 
 interface SmilesRepresentationProps extends MoleculeRepresentationBaseProps {
