@@ -18,6 +18,14 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci
       - run: npm run build
-      - run: npm publish --ignore-scripts --access public
+      - run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG=latest
+          if [ "$IS_PRERELEASE" = "true" ] || [ "$VERSION" != "${VERSION%%-*}" ]; then
+            TAG=beta
+          fi
+          echo "publishing $VERSION under dist-tag $TAG"
+          npm publish --ignore-scripts --access public --tag "$TAG"
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          IS_PRERELEASE: ${{github.event.release.prerelease}}
