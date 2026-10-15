@@ -27,6 +27,8 @@ import { BondIdentifiers } from './svg-computation';
 export const RDKIT_ATOMS_CLASS_REGEX = /atom-(\d+)/;
 const RDKIT_ATOMS_CLASS_IDENTIFIER = 'atom-';
 export const RDKIT_HIGHLIGHTED_ELIPSES_IDENTIFIER = `ellipse[class^="${RDKIT_ATOMS_CLASS_IDENTIFIER}"]`;
+export const RDKIT_BONDS_PATHS_IDENTIFIER = 'path[class^="bond-"]';
+export const RDKIT_ATOMS_LABELS_PATHS_IDENTIFIER = `path[class^="${RDKIT_ATOMS_CLASS_IDENTIFIER}"]:not([class*=" "])`;
 export const CLICKABLE_MOLECULE_CLASSNAME = 'clickable-molecule';
 const CLICKABLE_ATOM_ID = 'clickable-atom-';
 const CLICKABLE_BOND_ID = 'clickable-bond-';
