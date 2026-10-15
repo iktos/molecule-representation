@@ -43,6 +43,7 @@ import {
   BondIdentifiers,
   AttachedSvgIcon,
   computeIconsCoords,
+  computeSvgTransform,
   appendSvgIconsToSvg,
   createSvgElement,
   AtomsStyles,
@@ -122,6 +123,7 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
           return;
         }
 
+        const svgBeforeEffects = svg;
         // add effects to svg
         const moleculeDetails = await getMoleculeDetails(worker, {
           smiles: structureToDraw,
@@ -159,6 +161,9 @@ export const MoleculeRepresentation: React.FC<MoleculeRepresentationProps> = mem
           const iconsCoords = computeIconsCoords({
             svg: svgWithEllipsesToUseForIconScale ?? svg,
             attachedIcons: attachedSvgIcons,
+            transform: svgWithEllipsesToUseForIconScale
+              ? computeSvgTransform(svgWithEllipsesToUseForIconScale, svgBeforeEffects)
+              : null,
           });
           svg = appendSvgIconsToSvg(svg, iconsCoords) ?? svg;
         }

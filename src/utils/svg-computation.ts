@@ -40,8 +40,14 @@ import {
   getClickableBondId,
   isHighlightingPath,
   RDKIT_ATOMS_CLASS_REGEX,
+  RDKIT_ATOMS_LABELS_PATHS_IDENTIFIER,
+  RDKIT_BONDS_PATHS_IDENTIFIER,
   RDKIT_HIGHLIGHTED_ELIPSES_IDENTIFIER,
 } from './identifiers';
+
+const IDENTITY_SVG_TRANSFORM: SvgTransform = { scale: 1, dx: 0, dy: 0 };
+const SVG_PATH_POINTS_REGEX = /(-?\d+(?:\.\d+)?)[, ](-?\d+(?:\.\d+)?)/g;
+const MAX_SVG_TRANSFORM_RESIDUAL_PX = 2;
 
 export const createSvgElement = (svg: string, svgProps?: Record<string, unknown>) => {
   if (!svg) throw new Error('Missing svg');
@@ -56,11 +62,14 @@ export const createSvgElement = (svg: string, svgProps?: Record<string, unknown>
 export const computeIconsCoords = ({
   svg,
   attachedIcons,
+  transform,
 }: {
   svg: string;
   attachedIcons: AttachedSvgIcon[];
+  transform?: SvgTransform | null;
 }): IconCoords[] => {
   if (!svg) return [];
+  const iconsTransform = transform ?? IDENTITY_SVG_TRANSFORM;
   const coords: IconCoords[] = [];
   const parentWrapper = document.createElement('div');
   parentWrapper.innerHTML = svg;
@@ -76,7 +85,8 @@ export const computeIconsCoords = ({
     const { width: svgWidth, height: svgHeight } = svgDimenssions;
     const referenceAtoms = Array.from(parentSvg.querySelectorAll('ellipse.atom-0')) as SVGPathElement[];
     const scale = referenceAtoms.length
-      ? Math.min(
+      ? iconsTransform.scale *
+        Math.min(
           (parseFloat(referenceAtoms[0].getAttribute('rx') ?? '0.5') * 2) / svgWidth,
           (parseFloat(referenceAtoms[0].getAttribute('ry') ?? '0.5') * 2) / svgHeight,
         )
@@ -121,12 +131,106 @@ export const computeIconsCoords = ({
       scale,
       placements: attachedIconPlacements.map((placement) => ({
         ...placement,
-        xTranslate: placement.xTranslate - (svgWidth * scale) / 2,
-        yTranslate: placement.yTranslate - (svgHeight * scale) / 2,
+        xTranslate: iconsTransform.scale * placement.xTranslate + iconsTransform.dx - (svgWidth * scale) / 2,
+        yTranslate: iconsTransform.scale * placement.yTranslate + iconsTransform.dy - (svgHeight * scale) / 2,
       })),
     });
   }
   return coords;
+};
+
+const getPathsPointsByClassname = (parent: ParentNode, selector: string) => {
+  const pathsPointsByClassname = new Map<string, SvgPoint[][]>();
+  parent.querySelectorAll<SVGPathElement>(selector).forEach((path) => {
+    const classname = path.getAttribute('class');
+    if (!classname || path.id || isHighlightingPath(path)) return;
+    const points = Array.from(
+      path.getAttribute('d')?.matchAll(SVG_PATH_POINTS_REGEX) ?? [],
+      ([, x, y]): SvgPoint => [parseFloat(x), parseFloat(y)],
+    );
+    const paths = pathsPointsByClassname.get(classname);
+    if (paths) {
+      paths.push(points);
+    } else {
+      pathsPointsByClassname.set(classname, [points]);
+    }
+  });
+  return pathsPointsByClassname;
+};
+
+const pairPathsPoints = (source: Map<string, SvgPoint[][]>, target: Map<string, SvgPoint[][]>) => {
+  const pairs: [SvgPoint, SvgPoint][] = [];
+  source.forEach((sourcePaths, classname) => {
+    const targetPaths = target.get(classname);
+    if (!targetPaths || targetPaths.length !== sourcePaths.length) return;
+    if (sourcePaths.some((points, i) => points.length !== targetPaths[i].length)) return;
+    sourcePaths.forEach((points, i) => points.forEach((point, j) => pairs.push([point, targetPaths[i][j]])));
+  });
+  return pairs;
+};
+
+const fitSvgTransform = (pairs: [SvgPoint, SvgPoint][]): SvgTransform | null => {
+  if (pairs.length < 2) return null;
+  const mean = (pick: (pair: [SvgPoint, SvgPoint]) => number) =>
+    pairs.reduce((sum, pair) => sum + pick(pair), 0) / pairs.length;
+  const sourceX = mean(([source]) => source[0]);
+  const sourceY = mean(([source]) => source[1]);
+  const targetX = mean(([, target]) => target[0]);
+  const targetY = mean(([, target]) => target[1]);
+
+  let covariance = 0;
+  let variance = 0;
+  for (const [[sx, sy], [tx, ty]] of pairs) {
+    covariance += (sx - sourceX) * (tx - targetX) + (sy - sourceY) * (ty - targetY);
+    variance += (sx - sourceX) ** 2 + (sy - sourceY) ** 2;
+  }
+  if (!variance) return null;
+
+  const scale = covariance / variance;
+  const transform = { scale, dx: targetX - scale * sourceX, dy: targetY - scale * sourceY };
+  const maxResidual = pairs.reduce(
+    (max, [[sx, sy], [tx, ty]]) =>
+      Math.max(max, Math.hypot(scale * sx + transform.dx - tx, scale * sy + transform.dy - ty)),
+    0,
+  );
+  return maxResidual > MAX_SVG_TRANSFORM_RESIDUAL_PX ? null : transform;
+};
+
+const computeTransformBetweenParents = (source: ParentNode, target: ParentNode): SvgTransform | null => {
+  const pairs = pairPathsPoints(
+    getPathsPointsByClassname(source, RDKIT_BONDS_PATHS_IDENTIFIER),
+    getPathsPointsByClassname(target, RDKIT_BONDS_PATHS_IDENTIFIER),
+  );
+  if (pairs.length < 2) {
+    pairs.push(
+      ...pairPathsPoints(
+        getPathsPointsByClassname(source, RDKIT_ATOMS_LABELS_PATHS_IDENTIFIER),
+        getPathsPointsByClassname(target, RDKIT_ATOMS_LABELS_PATHS_IDENTIFIER),
+      ),
+    );
+  }
+  return fitSvgTransform(pairs);
+};
+
+export const computeSvgTransform = (sourceSvg: string, targetSvg: string): SvgTransform | null => {
+  const source = document.createElement('div');
+  source.innerHTML = sourceSvg;
+  const target = document.createElement('div');
+  target.innerHTML = targetSvg;
+  return computeTransformBetweenParents(source, target);
+};
+
+const transformEllipse = (ellipse: SVGEllipseElement, { scale, dx, dy }: SvgTransform) => {
+  const readAttribute = (name: string) => parseFloat(ellipse.getAttribute(name) ?? '0');
+  ellipse.setAttribute('cx', (scale * readAttribute('cx') + dx).toFixed(1));
+  ellipse.setAttribute('cy', (scale * readAttribute('cy') + dy).toFixed(1));
+  ellipse.setAttribute('rx', (scale * readAttribute('rx')).toFixed(1));
+  ellipse.setAttribute('ry', (scale * readAttribute('ry')).toFixed(1));
+};
+
+const getEllipsesInsertionIndex = (svg: string) => {
+  const backgroundRectEndIndex = svg.indexOf('</rect>');
+  return backgroundRectEndIndex !== -1 ? backgroundRectEndIndex + '</rect>'.length : svg.lastIndexOf('</svg>');
 };
 
 export const buildBondsHitboxes = ({
@@ -288,12 +392,14 @@ export const appendEllipsesToSvg = (mainSvg: string, ellipsesSourceSvg: string |
     const sourceParser = document.createElement('div');
     sourceParser.innerHTML = ellipsesSourceSvg;
     const sourceEllipses = sourceParser.querySelectorAll<SVGEllipseElement>(RDKIT_HIGHLIGHTED_ELIPSES_IDENTIFIER);
+    const transform = computeTransformBetweenParents(sourceParser, mainParser) ?? IDENTITY_SVG_TRANSFORM;
 
     const ellipsesToAdd: string[] = [];
     sourceEllipses.forEach((el) => {
       const classString = el.className.baseVal;
       const match = classString.match(RDKIT_ATOMS_CLASS_REGEX);
       if (match && match[1] && !existingAtomIndexes.has(match[1])) {
+        transformEllipse(el, transform);
         ellipsesToAdd.push(el.outerHTML);
       }
     });
@@ -301,9 +407,9 @@ export const appendEllipsesToSvg = (mainSvg: string, ellipsesSourceSvg: string |
     // if there are new, unique ellipses to add, append them to the main svg
     if (ellipsesToAdd.length > 0) {
       const ellipsesString = ellipsesToAdd.join('');
-      const closingSvgTagIndex = mainSvg.lastIndexOf('</svg>');
-      if (closingSvgTagIndex !== -1) {
-        return mainSvg.substring(0, closingSvgTagIndex) + ellipsesString + mainSvg.substring(closingSvgTagIndex);
+      const insertionIndex = getEllipsesInsertionIndex(mainSvg);
+      if (insertionIndex !== -1) {
+        return mainSvg.substring(0, insertionIndex) + ellipsesString + mainSvg.substring(insertionIndex);
       }
     }
   } catch (error) {
@@ -325,6 +431,14 @@ export interface IconCoords {
   scale: number;
   placements: IconsPlacements[];
 }
+
+export interface SvgTransform {
+  scale: number;
+  dx: number;
+  dy: number;
+}
+
+type SvgPoint = [number, number];
 
 interface IconsPlacements {
   xTranslate: number;

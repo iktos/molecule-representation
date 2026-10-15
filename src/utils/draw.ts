@@ -87,11 +87,9 @@ export const get_svg = async (props: DrawSmilesSVGProps, worker: Worker): Promis
     ? await computeAlignmentHighlights(worker, smiles, alignmentDetails)
     : { atomHighlights: {}, bondHighlights: {} };
 
-  const clickableAtomBgColors = computeClickableAtomHighlights(
-    moleculeDetails,
-    clickableAtoms,
-    generateClickableHotspots,
-  );
+  const clickableAtomBgColors = generateClickableHotspots
+    ? computeClickableAtomHighlights(moleculeDetails, clickableAtoms)
+    : {};
 
   const highlightAtomColors: HighlightColors = {
     ...clickableAtomBgColors,
@@ -105,7 +103,6 @@ export const get_svg = async (props: DrawSmilesSVGProps, worker: Worker): Promis
     ? Object.keys(highlightAtomColors).map(Number)
     : [
         ...atomsToHighlight.flat(),
-        ...(clickableAtoms?.clickableAtomsIds ?? []),
         ...Object.keys(heatmapAtomsWeights)
           .map((n) => parseInt(n) ?? null)
           .filter((n) => n !== null),
@@ -245,22 +242,16 @@ async function computeAlignmentHighlights(worker: Worker, smiles: string, alignm
 function computeClickableAtomHighlights(
   moleculeDetails: GetMoleculeDetailsOutputType,
   clickableAtoms: ClickableAtoms | undefined,
-  isForClickableOverlay: boolean,
 ): HighlightColors {
   if (!moleculeDetails) return {};
   const clickableAtomColors: HighlightColors = {};
   const backgroundColor = clickableAtoms?.clickableAtomsBackgroundColor ?? TRANSPARANT_RDKIT_COLOR;
-  const clickableAtomIds = clickableAtoms?.clickableAtomsIds ?? [...Array(moleculeDetails.NumHeavyAtoms).keys()];
 
-  for (const atomId of clickableAtomIds) {
-    clickableAtomColors[atomId] = isForClickableOverlay ? TRANSPARANT_RDKIT_COLOR : backgroundColor;
+  for (let i = 0; i < moleculeDetails.NumHeavyAtoms; i++) {
+    clickableAtomColors[i] = TRANSPARANT_RDKIT_COLOR;
   }
-  if (isForClickableOverlay) {
-    for (let i = 0; i < moleculeDetails.NumHeavyAtoms; i++) {
-      if (!clickableAtomIds.includes(i)) {
-        clickableAtomColors[i] = TRANSPARANT_RDKIT_COLOR;
-      }
-    }
+  for (const atomId of clickableAtoms?.clickableAtomsIds ?? []) {
+    clickableAtomColors[atomId] = backgroundColor;
   }
 
   return clickableAtomColors;

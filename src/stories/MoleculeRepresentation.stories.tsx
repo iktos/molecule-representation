@@ -688,6 +688,26 @@ ClickableSetOfAtoms.args = {
   },
 };
 
+export const ClickableSetOfHeteroatoms = TemplateWithOnAtomClick.bind({});
+ClickableSetOfHeteroatoms.args = {
+  ...PROPS,
+  smiles: 'O=C1CCN(c2cnn(-c3ccc(Cl)cc3)c2)CC(c2ccccc2)N1',
+  width: 400,
+  height: 220,
+  clickableAtoms: {
+    clickableAtomsIds: [0, 1, 4, 5, 7, 8, 9, 18, 19],
+    clickableAtomsBackgroundColor: [53 / 256, 141 / 256, 231 / 256, 0.3],
+  },
+};
+
+export const ClickableSetOfHeteroatomsWithTransparentBackground = TemplateWithOnAtomClick.bind({});
+ClickableSetOfHeteroatomsWithTransparentBackground.args = {
+  ...ClickableSetOfHeteroatoms.args,
+  clickableAtoms: {
+    clickableAtomsIds: [0, 1, 4, 5, 7, 8, 9, 18, 19],
+  },
+};
+
 export const WithOnClickPopup = TemplateWithOnBondAndOnAtomClickAndPopup.bind({});
 WithOnClickPopup.args = {
   ...PROPS,
